@@ -1,8 +1,10 @@
 # idz-utilities - Java Samples
 These Java Samples are useful coding examples for features such as Code Review (Software Analyzer) and Remote Resource APIs. 
 
-In order to make use of them...
-Clone this Git Repository - https://github.com/IBM/idz-utilities.git
+In order to make use of them... 
+
+Install EGit if it is not already part of your workbench, and clone this Git Repository - https://github.com/IBM/idz-utilities.git
+
 To import the Java plug-in samples into your workspace:
 1.	Open the Java perspective
 2.	From the menu bar, click File > Import…
