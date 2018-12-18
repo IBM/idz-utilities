@@ -1,0 +1,17 @@
+Manifest-Version: 1.0
+Export-Package: com.ibm.ftt.api.samples.notification
+Require-Bundle: com.ibm.ftt.jes.util,com.ibm.ftt.lpex.systemz,com.ibm.
+ ftt.projects.zos,com.ibm.ftt.properties.zos,com.ibm.ftt.resource.util
+ s,com.ibm.ftt.rse.mvs.client.ui,com.ibm.ftt.services,com.ibm.ftt.serv
+ ices.impl,com.ibm.ftt.ui.resources.core,org.eclipse.core.resources,or
+ g.eclipse.core.runtime,org.eclipse.jface.text,org.eclipse.rse.core,or
+ g.eclipse.rse.ui,com.ibm.etools.zos.subsystem.jes
+Bundle-Vendor: IBM
+Bundle-ActivationPolicy: lazy
+Bundle-Version: 8.2.150.v20160304_0805
+Bundle-Localization: plugin
+Bundle-Name: API Samples Plug-in
+Bundle-Activator: com.ibm.ftt.api.samples.SamplesPlugin
+Bundle-ManifestVersion: 2
+Bundle-SymbolicName: com.ibm.ftt.api.samples; singleton:=true
+

@@ -1,0 +1,442 @@
+*process langlvl(saa2) not('ª^') limits(extname(31));                           
+                                                                                
+ /********************************************************************/         
+ /*                                                                  */         
+ /* MODULE NAME    GAM0PII.PLI                                       */         
+ /*                                                                  */         
+ /* STATEMENT      IBM WebSphere Developer for System z              */         
+ /*                5724-L44                                          */         
+ /*                (c) Copyright IBM Corp. 2006                      */         
+ /*                                                                  */         
+ /* DISCLAIMER OF WARRANTIES                                         */         
+ /* You may copy, modify, and distribute these samples, or their     */         
+ /* modifications, in any form, internally or as part of your        */         
+ /* application or related documentation. These samples have not     */         
+ /* been tested under all conditions and are provided to you by      */         
+ /* IBM without obligation of support of any kind. IBM PROVIDES      */         
+ /* THESE SAMPLES "AS IS" SUBJECT TO ANY STATUTORY WARRANTIES THAT   */         
+ /* CANNOT BE EXCLUDED. IBM MAKES NO WARRANTIES OR CONDITIONS,       */         
+ /* EITHER EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO, THE     */         
+ /* IMPLIED WARRANTIES OR CONDITIONS OF MERCHANTABILITY, FITNESS     */         
+ /* FOR A PARTICULAR PURPOSE, AND NON-INFRINGEMENT REGARDING THESE   */         
+ /* SAMPLES OR TECHNICAL SUPPORT, IF ANY.                            */         
+ /* You will indemnify IBM or third parties that provide IBM         */         
+ /* products ("Third Parties") from and against any third party      */         
+ /* claim arising out of the use, modification or distribution of    */         
+ /* these samples with your application. You may not use the same    */         
+ /* path name as the original files/modules. You must not alter or   */         
+ /* delete any copyright information in the Samples.                 */         
+ /*                                                                  */         
+ /********************************************************************/         
+                                                                                
+   GAM0PII: Procedure (COMMAREAPTR) options (main);                             
+                                                                                
+   DCL COMMAREAPTR              POINTER,                                        
+       RESP                     FIXED BIN(31),                                  
+       TEMPMODEL                CHARACTER(20);                                  
+                                                                                
+   %INCLUDE DFHAID;                                                             
+   %INCLUDE GAM0MP3;                                                            
+   DCL 01  RMAP3                Based(ADDR(MAP3O)) Unaligned,                   
+          02 *                  CHARACTER(12),                                  
+          02 *                  CHARACTER(9),                                   
+          02 RSELNUM            CHARACTER(3),                                   
+          02 RMAP1_IO           DIMENSION(10),                                  
+             03 *               CHARACTER(9),                                   
+             03 RNUMBER         CHARACTER(3),                                   
+             03 *               CHARACTER(9),                                   
+             03 RYEAR           CHARACTER(4),                                   
+             03 *               CHARACTER(9),                                   
+             03 RMODEL          CHARACTER(20),                                  
+             03 *               CHARACTER(9),                                   
+             03 RCOLOR          CHARACTER(32),                                  
+             03 *               CHARACTER(9),                                   
+             03 RCOND           CHARACTER(4),                                   
+             03 *               CHARACTER(9),                                   
+             03 RPRICE          CHARACTER(10),                                  
+          02 *                  CHARACTER(9),                                   
+          02 RMESSAGE           CHARACTER(60);                                  
+                                                                                
+   DCL 01  LMAP3                Based(ADDR(MAP3O)) Unaligned,                   
+          02 *                  CHARACTER(12),                                  
+          02 *                  CHARACTER(8),                                   
+          02 LSELNUM            CHARACTER(3),                                   
+          02 LMAP1_IO           DIMENSION(10),                                  
+             03 *               CHARACTER(8),                                   
+             03 LNUMBER         CHARACTER(3),                                   
+             03 *               CHARACTER(8),                                   
+             03 LYEAR           CHARACTER(4),                                   
+             03 *               CHARACTER(8),                                   
+             03 LMODEL          CHARACTER(20),                                  
+             03 *               CHARACTER(8),                                   
+             03 LCOLOR          CHARACTER(32),                                  
+             03 *               CHARACTER(8),                                   
+             03 LCOND           CHARACTER(4),                                   
+             03 *               CHARACTER(8),                                   
+             03 LPRICE          CHARACTER(10),                                  
+          02 *                  CHARACTER(8),                                   
+          02 LMESSAGE           CHARACTER(60);                                  
+                                                                                
+   DCL 01 SELECTIONNUMBER       PICTURE '999';                                  
+                                                                                
+   DCL 01 LCOMMAREA             BASED (COMMAREAPTR),                            
+          02 LCAMAKESELECTED    CHARACTER(20),                                  
+          02 LCAMODLSELECTED    CHARACTER(20),                                  
+          02 LCAPREV            CHARACTER(1),                                   
+          02 LCANEXT            CHARACTER(1),                                   
+          02 LCACURSORPOS       SIGNED FIXED BIN(31),                           
+          02 LINVENTORYLIST     DIMENSION(10),                                  
+             03 LCAVIN          CHARACTER(4),                                   
+             03 LCAYEAR         CHARACTER(4),                                   
+             03 LCAMODEL        CHARACTER(20),                                  
+             03 LCACOLOR        CHARACTER(32),                                  
+             03 LCACOND         CHARACTER(4),                                   
+             03 LCAPRICE        CHARACTER(10),                                  
+          02 LCAMESSAGE         CHARACTER(60),                                  
+          02 LCALCLBUILD        CHARACTER(1);                                   
+                                                                                
+   DCL 01 WCOMMAREA,                                                            
+          02 CAMAKESELECTED     CHARACTER(20),                                  
+          02 CAMODLSELECTED     CHARACTER(20),                                  
+          02 CAPREV             CHARACTER(1),                                   
+          02 CANEXT             CHARACTER(1),                                   
+          02 CACURSORPOS        SIGNED FIXED BIN(31),                           
+          02 INVENTORYLIST      DIMENSION(10),                                  
+             03 CAVIN           CHARACTER(4),                                   
+             03 CAYEAR          CHARACTER(4),                                   
+             03 CAMODEL         CHARACTER(20),                                  
+             03 CACOLOR         CHARACTER(32),                                  
+             03 CACOND          CHARACTER(4),                                   
+             03 CAPRICE         CHARACTER(10),                                  
+          02 CAMESSAGE          CHARACTER(60),                                  
+          02 CALCLBUILD         CHARACTER(1);                                   
+                                                                                
+   DCL 01 TEMPSIZE              FIXED BIN(15);                                  
+                                                                                
+   TEMPSIZE = SIZE(MAP3O);                                                      
+                                                                                
+   CALL PLIFILL(ADDR(MAP3O),'00'X,SIZE(MAP3O));                                 
+   CALL PLIFILL(ADDR(WCOMMAREA),'00'X,SIZE(WCOMMAREA));                         
+   CALL PLIFILL(ADDR(TEMPMODEL),'00'X,SIZE(TEMPMODEL));                         
+                                                                                
+   ON CONVERSION CALL ERRORHANDLE;                                              
+                                                                                
+   IF TEMPSIZE = 1301 THEN                                                      
+      CALCLBUILD = "Y";                                                         
+   ELSE                                                                         
+      CALCLBUILD = "N";                                                         
+                                                                                
+   IF EIBCALEN ^= SIZE(WCOMMAREA) THEN                                          
+   DO;                                                                          
+      IF CALCLBUILD = "Y" THEN                                                  
+         LMESSAGE = "COMM AREA ERROR";                                          
+      ELSE                                                                      
+         RMESSAGE = "COMM AREA ERROR";                                          
+      CALL SENDMAP;                                                             
+   END;                                                                         
+   ELSE                                                                         
+      WCOMMAREA = LCOMMAREA;                                                    
+                                                                                
+   IF TEMPSIZE = 1301 THEN                                                      
+      CALCLBUILD = "Y";                                                         
+   ELSE                                                                         
+      CALCLBUILD = "N";                                                         
+                                                                                
+   SELECT(EIBAID);                                                              
+                                                                                
+   WHEN(DFHCLEAR)                                                               
+        IF LMESSAGE ^= "COMM AREA ERROR" &                                      
+           RMESSAGE ^= "COMM AREA ERROR" THEN                                   
+        do;                                                                     
+           call POPULATEMAP;                                                    
+           call SENDMAP;                                                        
+        end;                                                                    
+        ELSE                                                                    
+           EXEC CICS RETURN TRANSID('GPII');                                    
+                                                                                
+   WHEN(DFHPF12)                                                                
+        do;                                                                     
+         EXEC CICS XCTL PROGRAM('GAM0PMI');                                     
+        end;                                                                    
+                                                                                
+   WHEN(DFHPF3)                                                                 
+        do;                                                                     
+         EXEC CICS SYNCPOINT;                                                   
+         EXEC CICS SEND                                                         
+                   CONTROL                                                      
+                   ERASE                                                        
+                   FREEKB;                                                      
+                                                                                
+         EXEC CICS RETURN;                                                      
+        end;                                                                    
+                                                                                
+   WHEN(DFHENTER)                                                               
+        IF LMESSAGE ^= "COMM AREA ERROR" &                                      
+           RMESSAGE ^= "COMM AREA ERROR" THEN                                   
+        do;                                                                     
+           IF CAMODEL(1) = TEMPMODEL THEN                                       
+           DO;                                                                  
+              call GETDATA;                                                     
+              call SENDMAP;                                                     
+           END;                                                                 
+           ELSE                                                                 
+           DO;                                                                  
+              CALL GETMAP;                                                      
+           END;                                                                 
+        end;                                                                    
+        ELSE                                                                    
+           EXEC CICS RETURN TRANSID('GPII');                                    
+                                                                                
+   WHEN(DFHPF8)                                                                 
+        IF LMESSAGE ^= "COMM AREA ERROR" &                                      
+           RMESSAGE ^= "COMM AREA ERROR" THEN                                   
+        do;                                                                     
+           CANEXT = "Y";                                                        
+           call GETDATA;                                                        
+           call SENDMAP;                                                        
+        end;                                                                    
+        ELSE                                                                    
+           EXEC CICS RETURN TRANSID('GPII');                                    
+                                                                                
+   WHEN(DFHPF5)                                                                 
+        IF LMESSAGE ^= "COMM AREA ERROR" &                                      
+           RMESSAGE ^= "COMM AREA ERROR" THEN                                   
+        do;                                                                     
+           call GETDATA;                                                        
+           call SENDMAP;                                                        
+        end;                                                                    
+        ELSE                                                                    
+           EXEC CICS RETURN TRANSID('GPII');                                    
+                                                                                
+   WHEN(DFHPF7)                                                                 
+        IF LMESSAGE ^= "COMM AREA ERROR" &                                      
+           RMESSAGE ^= "COMM AREA ERROR" THEN                                   
+        do;                                                                     
+           CAPREV ="Y";                                                         
+           call GETDATA;                                                        
+           call SENDMAP;                                                        
+        end;                                                                    
+        ELSE                                                                    
+           EXEC CICS RETURN TRANSID('GPII');                                    
+                                                                                
+   OTHERWISE                                                                    
+      IF LMESSAGE ^= "COMM AREA ERROR" &                                        
+         RMESSAGE ^= "COMM AREA ERROR" THEN                                     
+      DO;                                                                       
+         CALL POPULATEMAP;                                                      
+         IF CALCLBUILD = "Y" THEN                                               
+            LMESSAGE = 'Invalid key pressed.';                                  
+         ELSE                                                                   
+            RMESSAGE = "INVALID KEY PRESSED.";                                  
+         CALL SENDMAP;                                                          
+      END;                                                                      
+      ELSE                                                                      
+         EXEC CICS RETURN TRANSID('GPII');                                      
+                                                                                
+   END;                                                                         
+                                                                                
+   EXEC CICS RETURN TRANSID('GPII') COMMAREA( WCOMMAREA );                      
+                                                                                
+                                                                                
+   GETDATA:  PROCEDURE;                                                         
+      EXEC CICS LINK PROGRAM('GAM0PSI') COMMAREA( WCOMMAREA );                  
+      call POPULATEMAP;                                                         
+   END;                                                                         
+                                                                                
+   POPULATEMAP:  PROCEDURE;                                                     
+                                                                                
+      DCL ARRAYINDEX            FIXED DECIMAL(2,0),                             
+          DISPLAYNUMBER         PIC '99',                                       
+          EMPTYMODEL            CHARACTER(20),                                  
+          EMPTYMESSAGE          CHARACTER(60);                                  
+                                                                                
+      ARRAYINDEX = 1;                                                           
+      CALL PLIFILL(ADDR(EMPTYMODEL),'00'X,SIZE(EMPTYMODEL));                    
+      CALL PLIFILL(ADDR(EMPTYMESSAGE),'00'X,SIZE(EMPTYMESSAGE));                
+                                                                                
+      DO FOREVER;                                                               
+                                                                                
+      IF ARRAYINDEX > 10 THEN                                                   
+         GOTO EXITFORLOOP;                                                      
+                                                                                
+      IF CAMODEL(ARRAYINDEX) ^= EMPTYMODEL THEN                                 
+      DO;                                                                       
+         DISPLAYNUMBER = ARRAYINDEX;                                            
+         IF CALCLBUILD = "Y" THEN                                               
+         DO;                                                                    
+            LNUMBER(ARRAYINDEX) = DISPLAYNUMBER;                                
+            LMODEL (ARRAYINDEX) = CAMODEL (ARRAYINDEX);                         
+            LYEAR  (ARRAYINDEX) = CAYEAR (ARRAYINDEX);                          
+            LCOLOR (ARRAYINDEX) = CACOLOR (ARRAYINDEX);                         
+            LCOND  (ARRAYINDEX) = CACOND (ARRAYINDEX);                          
+            LPRICE (ARRAYINDEX) = CAPRICE (ARRAYINDEX);                         
+         END;                                                                   
+         ELSE                                                                   
+         DO;                                                                    
+            RNUMBER(ARRAYINDEX) = DISPLAYNUMBER;                                
+            RMODEL (ARRAYINDEX) = CAMODEL (ARRAYINDEX);                         
+            RYEAR  (ARRAYINDEX) = CAYEAR  (ARRAYINDEX);                         
+            RCOLOR (ARRAYINDEX) = CACOLOR (ARRAYINDEX);                         
+            RCOND  (ARRAYINDEX) = CACOND  (ARRAYINDEX);                         
+            RPRICE (ARRAYINDEX) = CAPRICE (ARRAYINDEX);                         
+         END;                                                                   
+      END;                                                                      
+                                                                                
+      ARRAYINDEX = ARRAYINDEX + 1;                                              
+                                                                                
+      END;                                                                      
+                                                                                
+      EXITFORLOOP:                                                              
+                                                                                
+      IF CAMESSAGE ^= EMPTYMESSAGE THEN                                         
+         IF CALCLBUILD = "Y" THEN                                               
+         DO;                                                                    
+            LMESSAGE = CAMESSAGE;                                               
+            LSELNUM = "___";                                                    
+         END;                                                                   
+         ELSE                                                                   
+         DO;                                                                    
+            RMESSAGE = CAMESSAGE;                                               
+            RSELNUM = "___";                                                    
+         END;                                                                   
+                                                                                
+   END;                                                                         
+                                                                                
+   SENDMAP:  PROCEDURE;                                                         
+      IF CALCLBUILD = "Y" THEN                                                  
+         EXEC CICS SEND MAP('MAP3')                                             
+                   MAPSET('GAM0MP3')                                            
+                   FROM( LMAP3 )                                                
+                   ERASE;                                                       
+      ELSE                                                                      
+         EXEC CICS SEND MAP('MAP3')                                             
+                   MAPSET('GAM0MP3')                                            
+                   FROM( RMAP3 )                                                
+                   ERASE;                                                       
+                                                                                
+   END;                                                                         
+                                                                                
+   GETMAP: PROCEDURE;                                                           
+      EXEC CICS IGNORE CONDITION MAPFAIL;                                       
+      IF CALCLBUILD = "Y" THEN                                                  
+         EXEC CICS RECEIVE MAP('MAP3')                                          
+                   MAPSET('GAM0MP3')                                            
+                   INTO(LMAP3);                                                 
+      ELSE                                                                      
+         EXEC CICS RECEIVE MAP('MAP3')                                          
+                   MAPSET('GAM0MP3')                                            
+                   INTO(RMAP3);                                                 
+                                                                                
+      CALL PROCESSMAP;                                                          
+                                                                                
+   END;                                                                         
+                                                                                
+   PROCESSMAP: PROCEDURE;                                                       
+   DCL MAXLIST          FIXED DECIMAL(2,0);                                     
+                                                                                
+   CAMESSAGE = '';                                                              
+                                                                                
+   MAXLIST = 1;                                                                 
+                                                                                
+   DO FOREVER;                                                                  
+                                                                                
+   IF CAMODEL(MAXLIST) = TEMPMODEL THEN                                         
+      GOTO EXITLOOP;                                                            
+   ELSE                                                                         
+      MAXLIST = MAXLIST + 1;                                                    
+                                                                                
+   IF MAXLIST = 10 THEN                                                         
+      GOTO EXITLOOP;                                                            
+   END;                                                                         
+   EXITLOOP:                                                                    
+                                                                                
+   IF CALCLBUILD = "Y" THEN                                                     
+   DO;                                                                          
+      IF SUBSTR(LSELNUM,1,1) = "_" THEN                                         
+      DO;                                                                       
+         SUBSTR(LSELNUM,1,1) = ' ';                                             
+      END;                                                                      
+      IF SUBSTR(LSELNUM,2,1) = "_" THEN                                         
+      DO;                                                                       
+         SUBSTR(LSELNUM,2,1) = ' ';                                             
+      END;                                                                      
+      IF SUBSTR(LSELNUM,3,1) = "_" THEN                                         
+      DO;                                                                       
+         SUBSTR(LSELNUM,3,1) = ' ';                                             
+      END;                                                                      
+   END;                                                                         
+   ELSE                                                                         
+   DO;                                                                          
+      IF SUBSTR(RSELNUM,1,1) = "_" THEN                                         
+      DO;                                                                       
+         SUBSTR(RSELNUM,1,1) = ' ';                                             
+      END;                                                                      
+      IF SUBSTR(RSELNUM,2,1) = "_" THEN                                         
+      DO;                                                                       
+         SUBSTR(RSELNUM,2,1) = ' ';                                             
+      END;                                                                      
+      IF SUBSTR(RSELNUM,3,1) = "_" THEN                                         
+      DO;                                                                       
+         SUBSTR(RSELNUM,3,1) = ' ';                                             
+      END;                                                                      
+   END;                                                                         
+                                                                                
+   IF CALCLBUILD = "Y" THEN                                                     
+      SELECTIONNUMBER = LSELNUM;                                                
+   ELSE                                                                         
+      SELECTIONNUMBER = RSELNUM;                                                
+                                                                                
+   IF SELECTIONNUMBER > MAXLIST THEN                                            
+      CAMESSAGE = "INVALID SELECTION PLEASE TRY AGAIN!";                        
+                                                                                
+   IF SELECTIONNUMBER < 1 THEN                                                  
+      CAMESSAGE = "INVALID SELECTION PLEASE TRY AGAIN!";                        
+                                                                                
+   IF CAMESSAGE ^= "INVALID SELECTION PLEASE TRY AGAIN!" THEN                   
+   DO;                                                                          
+      DCL 01 PASSDATA,                                                          
+             02 PVIN            CHARACTER(4),                                   
+             02 PMAKE           CHARACTER(20),                                  
+             02 PMODEL          CHARACTER(20),                                  
+             02 *               CHARACTER(290),                                 
+             02 PCP             SIGNED FIXED BIN(31),                           
+             02 PLCLBUILD       CHARACTER(1);                                   
+                                                                                
+      CALL PLIFILL(ADDR(PASSDATA),'00'X,SIZE(PASSDATA));                        
+                                                                                
+      PVIN      = CAVIN (SELECTIONNUMBER);                                      
+      PMAKE     = CAMAKESELECTED;                                               
+      PMODEL    = CAMODLSELECTED;                                               
+      PCP       = CACURSORPOS;                                                  
+      PLCLBUILD = CALCLBUILD;                                                   
+                                                                                
+      EXEC CICS XCTL PROGRAM('GAM0PDI') COMMAREA (PASSDATA);                    
+                                                                                
+   END;                                                                         
+   ELSE                                                                         
+   DO;                                                                          
+      CALL POPULATEMAP;                                                         
+      CALL SENDMAP;                                                             
+   END;                                                                         
+                                                                                
+   END;                                                                         
+                                                                                
+   ERRORHANDLE: PROCEDURE;                                                      
+      SELECTIONNUMBER = 0;                                                      
+      ONSOURCE() = 0;                                                           
+      ONCHAR() = '0';                                                           
+      CAMESSAGE = "INVALID SELECTION PLEASE TRY AGAIN!";                        
+      REVERT CONVERSION;                                                        
+      IF CALCLBUILD = "Y" THEN                                                  
+      DO;                                                                       
+         LSELNUM='0';                                                           
+      END;                                                                      
+      ELSE                                                                      
+      DO;                                                                       
+         RSELNUM='0';                                                           
+      END;                                                                      
+                                                                                
+   END;                                                                         
+                                                                                
+                                                                                
+   END;                                                                        

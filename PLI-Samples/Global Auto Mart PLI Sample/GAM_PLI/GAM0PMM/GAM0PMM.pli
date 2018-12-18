@@ -1,0 +1,136 @@
+*process source not('ª^') dllinit options;                                      
+*process langlvl(saa2) limits(extname(31));                                     
+                                                                                
+ /********************************************************************/         
+ /*                                                                  */         
+ /* MODULE NAME    GAM0PMM.PLI                                       */         
+ /*                                                                  */         
+ /* STATEMENT      IBM WebSphere Developer for System z              */         
+ /*                5724-L44                                          */         
+ /*                (c) Copyright IBM Corp. 2006                      */         
+ /*                                                                  */         
+ /* DISCLAIMER OF WARRANTIES                                         */         
+ /* You may copy, modify, and distribute these samples, or their     */         
+ /* modifications, in any form, internally or as part of your        */         
+ /* application or related documentation. These samples have not     */         
+ /* been tested under all conditions and are provided to you by      */         
+ /* IBM without obligation of support of any kind. IBM PROVIDES      */         
+ /* THESE SAMPLES "AS IS" SUBJECT TO ANY STATUTORY WARRANTIES THAT   */         
+ /* CANNOT BE EXCLUDED. IBM MAKES NO WARRANTIES OR CONDITIONS,       */         
+ /* EITHER EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO, THE     */         
+ /* IMPLIED WARRANTIES OR CONDITIONS OF MERCHANTABILITY, FITNESS     */         
+ /* FOR A PARTICULAR PURPOSE, AND NON-INFRINGEMENT REGARDING THESE   */         
+ /* SAMPLES OR TECHNICAL SUPPORT, IF ANY.                            */         
+ /* You will indemnify IBM or third parties that provide IBM         */         
+ /* products ("Third Parties") from and against any third party      */         
+ /* claim arising out of the use, modification or distribution of    */         
+ /* these samples with your application. You may not use the same    */         
+ /* path name as the original files/modules. You must not alter or   */         
+ /* delete any copyright information in the Samples.                 */         
+ /*                                                                  */         
+ /********************************************************************/         
+                                                                                
+   GAM0PMM: Procedure (COMMAREAPTR) options (main);                             
+                                                                                
+   Declare                                                                      
+      RecLength         fixed bin(15),                                          
+      SendLength        fixed bin(15),                                          
+      COMMAREAPTR       POINTER;                                                
+                                                                                
+   %INCLUDE GAM0IMT;                                                            
+                                                                                
+   DCL 1 LCOMMAREA              BASED (COMMAREAPTR),                            
+           2 LMAKESELECTED      CHARACTER(1),                                   
+           2 LCAMAKE            CHARACTER(20),                                  
+           2 LLIST_OF_MAKES     DIMENSION(20),                                  
+              3 LVALMAKE        CHARACTER(20),                                  
+           2 LLIST_OF_MODELS    DIMENSION(20),                                  
+              3 LVALMODEL       CHARACTER(20),                                  
+           2 LERRMSSG           CHARACTER(60),                                  
+           2 LCALCLBUILD        CHARACTER(1);                                   
+                                                                                
+   DCL 1 WCOMMAREA,                                                             
+           2 MAKESELECTED       CHARACTER(1),                                   
+           2 CAMAKE             CHARACTER(20),                                  
+           2 LIST_OF_MAKES      DIMENSION(20),                                  
+              3 VALMAKE         CHARACTER(20),                                  
+           2 LIST_OF_MODELS     DIMENSION(20),                                  
+              3 VALMODEL        CHARACTER(20),                                  
+           2 ERRMSSG            CHARACTER(60),                                  
+           2 CALCLBUILD         CHARACTER(1);                                   
+                                                                                
+   EXEC SQL INCLUDE SQLCA;                                                      
+                                                                                
+   EXEC SQL DECLARE MAKECRSR CURSOR FOR                                         
+            SELECT DISTINCT MAKE                                                
+                FROM MAKE_MODEL;                                                
+                                                                                
+   EXEC SQL DECLARE MODLCRSR CURSOR FOR                                         
+            SELECT MODEL FROM MAKE_MODEL                                        
+                 WHERE MAKE = :CAMAKE;                                          
+                                                                                
+   IF EIBCALEN ^= SIZE(WCOMMAREA) THEN                                          
+      EXEC CICS RETURN;                                                         
+   ELSE                                                                         
+      WCOMMAREA = LCOMMAREA;                                                    
+                                                                                
+   IF CALCLBUILD = "Y" THEN                                                     
+      EXEC SQL CONNECT TO SAMPLE;                                               
+                                                                                
+   IF MAKESELECTED = "Y" THEN                                                   
+      DO;                                                                       
+      EXEC SQL OPEN MODLCRSR;                                                   
+      CALL GETMODELS;                                                           
+      EXEC SQL CLOSE MODLCRSR;                                                  
+      END;                                                                      
+   ELSE                                                                         
+      DO;                                                                       
+      EXEC SQL OPEN MAKECRSR;                                                   
+      CALL GETMAKES;                                                            
+      EXEC SQL CLOSE MAKECRSR;                                                  
+      END;                                                                      
+                                                                                
+   LCOMMAREA = WCOMMAREA;                                                       
+                                                                                
+   EXEC CICS RETURN;                                                            
+                                                                                
+   GETMAKES: PROCEDURE;                                                         
+      Dcl TEMPINDEX        DECIMAL(2,0),                                        
+          TEMPMAKE         CHARACTER(20);                                       
+      TEMPINDEX = 1;                                                            
+                                                                                
+      CALL PLIFILL(ADDR(TEMPMAKE),'00'X,SIZE(TEMPMAKE));                        
+                                                                                
+      Do Forever;                                                               
+         EXEC SQL FETCH MAKECRSR INTO :TEMPMAKE;                                
+         if TEMPINDEX > 20 | SQLCODE ^= 0 then                                  
+            goto EXITLOOP;                                                      
+         VALMAKE(TEMPINDEX) = TEMPMAKE;                                         
+         TEMPINDEX = TEMPINDEX + 1;                                             
+      end;                                                                      
+      EXITLOOP:                                                                 
+                                                                                
+      IF SQLCODE ^= 0 & SQLCODE ^= 100 THEN                                     
+         ERRMSSG = "SQL ERROR";                                                 
+                                                                                
+   END;                                                                         
+                                                                                
+   GETMODELS: PROCEDURE;                                                        
+      Dcl TEMPINDEX         DECIMAL(2,0),                                       
+          TEMPMODEL         CHARACTER(20);                                      
+      TEMPINDEX = 1;                                                            
+                                                                                
+      Do Forever;                                                               
+         EXEC SQL FETCH MODLCRSR INTO :TEMPMODEL;                               
+         if TEMPINDEX > 20 | SQLCODE ^= 0 then                                  
+            goto EXITLOOP;                                                      
+         VALMODEL(TEMPINDEX) = TEMPMODEL;                                       
+         TEMPINDEX = TEMPINDEX + 1;                                             
+      end;                                                                      
+      EXITLOOP:                                                                 
+                                                                                
+      IF SQLCODE ^= 0 & SQLCODE ^= 100 THEN                                     
+         ERRMSSG = "SQL ERROR";                                                 
+   END;                                                                         
+                                                                                
+   END;                                                                        

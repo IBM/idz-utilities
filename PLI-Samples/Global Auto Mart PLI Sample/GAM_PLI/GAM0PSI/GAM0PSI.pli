@@ -1,0 +1,291 @@
+*process system(cics) source not('ª^') dllinit options;                         
+*process langlvl(saa2) limits(extname(31));                                     
+                                                                                
+ /********************************************************************/         
+ /*                                                                  */         
+ /* MODULE NAME    GAM0PSI.PLI                                       */         
+ /*                                                                  */         
+ /* STATEMENT      IBM WebSphere Developer for System z              */         
+ /*                5724-L44                                          */         
+ /*                (c) Copyright IBM Corp. 2006                      */         
+ /*                                                                  */         
+ /* DISCLAIMER OF WARRANTIES                                         */         
+ /* You may copy, modify, and distribute these samples, or their     */         
+ /* modifications, in any form, internally or as part of your        */         
+ /* application or related documentation. These samples have not     */         
+ /* been tested under all conditions and are provided to you by      */         
+ /* IBM without obligation of support of any kind. IBM PROVIDES      */         
+ /* THESE SAMPLES "AS IS" SUBJECT TO ANY STATUTORY WARRANTIES THAT   */         
+ /* CANNOT BE EXCLUDED. IBM MAKES NO WARRANTIES OR CONDITIONS,       */         
+ /* EITHER EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO, THE     */         
+ /* IMPLIED WARRANTIES OR CONDITIONS OF MERCHANTABILITY, FITNESS     */         
+ /* FOR A PARTICULAR PURPOSE, AND NON-INFRINGEMENT REGARDING THESE   */         
+ /* SAMPLES OR TECHNICAL SUPPORT, IF ANY.                            */         
+ /* You will indemnify IBM or third parties that provide IBM         */         
+ /* products ("Third Parties") from and against any third party      */         
+ /* claim arising out of the use, modification or distribution of    */         
+ /* these samples with your application. You may not use the same    */         
+ /* path name as the original files/modules. You must not alter or   */         
+ /* delete any copyright information in the Samples.                 */         
+ /*                                                                  */         
+ /********************************************************************/         
+                                                                                
+   GAM0PSI: Procedure (COMMAREAPTR) options (main);                             
+                                                                                
+   DCL COMMAREAPTR              POINTER,                                        
+       RESP                     FIXED BIN(31),                                  
+       CURSORPOSITION           SIGNED FIXED BIN(31),                           
+       EMPTYCURSOR              SIGNED FIXED BIN(31),                           
+       TEMPPOSITION             FIXED BIN(15),                                  
+       POSINDEX                 FIXED BIN(15);                                  
+                                                                                
+   DCL 01 WCOMMAREA             BASED (COMMAREAPTR),                            
+          02 CAMAKESELECTED     CHARACTER(20),                                  
+          02 CAMODLSELECTED     CHARACTER(20),                                  
+          02 CAPREV             CHARACTER(1),                                   
+          02 CANEXT             CHARACTER(1),                                   
+          02 CACURSORPOS        SIGNED FIXED BIN(31),                           
+          02 INVENTORYLIST      DIMENSION(10),                                  
+             03 CAVIN           CHARACTER(4),                                   
+             03 CAYEAR          CHARACTER(4),                                   
+             03 CAMODEL         CHARACTER(20),                                  
+             03 CACOLOR         CHARACTER(32),                                  
+             03 CACOND          CHARACTER(4),                                   
+             03 CAPRICE         CHARACTER(10),                                  
+          02 CAMESSAGE          CHARACTER(60),                                  
+          02 CALCLBUILD         CHARACTER(1);                                   
+                                                                                
+   %INCLUDE GAM0ICT;                                                            
+                                                                                
+   EXEC SQL INCLUDE SQLCA;                                                      
+                                                                                
+   CALL PLIFILL(ADDR(EMPTYCURSOR),'00'X,SIZE(EMPTYCURSOR));                     
+                                                                                
+   EXEC SQL DECLARE ICURSOR CURSOR FOR                                          
+               SELECT VIN, AUTOYEAR, MODEL, COLOR, NEWAUTO, PRICE               
+                   FROM CENTINVNTRY                                             
+                   WHERE MODEL = :CAMODLSELECTED AND                            
+                         MAKE  = :CAMAKESELECTED                                
+               ORDER BY VIN;                                                    
+                                                                                
+   IF CALCLBUILD = "Y" THEN                                                     
+      EXEC SQL CONNECT TO SAMPLE;                                               
+                                                                                
+   CALL MAKEBROWSE;                                                             
+                                                                                
+   EXEC CICS RETURN;                                                            
+                                                                                
+   MAKEBROWSE:   procedure;                                                     
+                                                                                
+      if eibcalen ^= SIZE(WCOMMAREA) then                                       
+         do;                                                                    
+                CAMESSAGE = "Comm Area Error";                                  
+                EXEC CICS RETURN;                                               
+         end;                                                                   
+                                                                                
+      IF CAMESSAGE = 'REACHED TOP OF LIST' & CAPREV = 'Y' then                  
+         do;                                                                    
+               CANEXT = "N";                                                    
+               CAPREV = "N";                                                    
+               EXEC CICS RETURN;                                                
+         end;                                                                   
+                                                                                
+      IF CAMESSAGE = 'REACHED END OF LIST' & CANEXT = 'Y' then                  
+         do;                                                                    
+               CANEXT = "N";                                                    
+               CAPREV = "N";                                                    
+               EXEC CICS RETURN;                                                
+         end;                                                                   
+                                                                                
+      CURSORPOSITION = CACURSORPOS;                                             
+                                                                                
+      IF CANEXT = '00'X & CAPREV = '00'X then                                   
+         do;                                                                    
+            call GETLISTOFCARS;                                                 
+         end;                                                                   
+                                                                                
+      IF CANEXT = 'Y' & CAMESSAGE ^= 'REACHED END OF LIST' then                 
+         do;                                                                    
+            CAMESSAGE = "";                                                     
+            call DISPLAYNEXTDATA;                                               
+         end;                                                                   
+                                                                                
+      IF CAPREV = 'Y' & CAMESSAGE ^= 'REACHED TOP OF LIST' then                 
+         do;                                                                    
+            CAMESSAGE = "";                                                     
+            call DISPLAYPREVIOUSDATA;                                           
+         end;                                                                   
+                                                                                
+   end;                                                                         
+                                                                                
+   GETLISTOFCARS:   procedure;                                                  
+      CAMESSAGE = "";                                                           
+      TEMPPOSITION = 1;                                                         
+      IF CURSORPOSITION = EMPTYCURSOR THEN                                      
+         CURSORPOSITION = 1;                                                    
+      POSINDEX = 1;                                                             
+      call DISPLAYSCROLLEDDATA;                                                 
+   end;                                                                         
+                                                                                
+   GETINVENTORYROW: procedure;                                                  
+                                                                                
+      Do Forever;                                                               
+                                                                                
+         IF POSINDEX > 10 | SQLCODE ^= 0 then                                   
+         do;                                                                    
+            GOTO ENDLOOP;                                                       
+         end;                                                                   
+                                                                                
+         EXEC SQL FETCH ICURSOR                                                 
+                  INTO :VIN,                                                    
+                       :AUTOYEAR,                                               
+                       :MODEL,                                                  
+                       :COLOR,                                                  
+                       :NEWAUTO,                                                
+                       :PRICE;                                                  
+                                                                                
+         IF SQLCODE = 0 then                                                    
+         do;                                                                    
+            DCL TEMPPRICE     PICTURE '$999999V.99';                            
+            DCL CONVERTYEAR   PICTURE '9999';                                   
+            DCL YEARPOS       FIXED BIN(15);                                    
+            DCL YEARMUL       FIXED BIN(15);                                    
+                                                                                
+            DCL TEMPYEAR      FIXED BIN(31);                                    
+                                                                                
+            CONVERTYEAR = AUTOYEAR;                                             
+                                                                                
+            CAVIN  (POSINDEX) = VIN;                                            
+            CAMODEL(POSINDEX) = MODEL;                                          
+            CAYEAR (POSINDEX) = CONVERTYEAR;                                    
+            CACOLOR(POSINDEX) = COLOR;                                          
+            IF NEWAUTO = "Y" THEN                                               
+               CACOND (POSINDEX) = "NEW";                                       
+            ELSE IF NEWAUTO = "N" THEN                                          
+               CACOND (POSINDEX) = "USED";                                      
+            TEMPPRICE = PRICE;                                                  
+            CAPRICE(POSINDEX) = TEMPPRICE;                                      
+                                                                                
+            DCL X             DEC(2,0);                                         
+            DCL STOPPARSE     CHARACTER(1);                                     
+                                                                                
+            X = 1;                                                              
+            STOPPARSE = "N";                                                    
+                                                                                
+            DO FOREVER;                                                         
+               IF STOPPARSE = "Y" THEN                                          
+                  GOTO ENDTRIM;                                                 
+               IF SUBSTR(CAPRICE(POSINDEX),X,1) ^= "$" &                        
+                  SUBSTR(CAPRICE(POSINDEX),X,1) ^= "0" THEN                     
+                  STOPPARSE = "Y";                                              
+               ELSE                                                             
+                  IF SUBSTR(CAPRICE(POSINDEX),X,1) ^= "$" THEN                  
+                     SUBSTR(CAPRICE(POSINDEX),X,1) = " ";                       
+                                                                                
+               X = X + 1;                                                       
+            END;                                                                
+                                                                                
+            ENDTRIM:                                                            
+                                                                                
+         end;                                                                   
+                                                                                
+         CURSORPOSITION = CURSORPOSITION + 1;                                   
+         POSINDEX = POSINDEX + 1;                                               
+                                                                                
+                                                                                
+      end;  /* Do Forever */                                                    
+                                                                                
+      ENDLOOP:                                                                  
+                                                                                
+      IF SQLCODE ^= 0 then CAMESSAGE = "SQL Error";                             
+                                                                                
+      IF SQLCODE = 100 then                                                     
+      do;                                                                       
+         DCL TEMPSPACES            CHARACTER(20);                               
+         CALL PLIFILL(ADDR(TEMPSPACES),'00'X,SIZE(TEMPSPACES));                 
+         IF CAMODEL(1) = TEMPSPACES                                             
+            then CAMESSAGE = "0 CARS IN INVENTORY";                             
+            else CAMESSAGE = "REACHED END OF LIST";                             
+      end;                                                                      
+                                                                                
+      POSINDEX = 1;                                                             
+                                                                                
+   end;                                                                         
+                                                                                
+   OPENCURSOR:      procedure;                                                  
+                                                                                
+      EXEC SQL OPEN ICURSOR;                                                    
+      TEMPPOSITION = 1;                                                         
+                                                                                
+      Do Forever;                                                               
+        IF TEMPPOSITION = CURSORPOSITION | SQLCODE ^= 0                         
+           then GOTO ENDLOOP;                                                   
+                                                                                
+        EXEC SQL FETCH ICURSOR                                                  
+                  INTO :VIN,                                                    
+                       :AUTOYEAR,                                               
+                       :MODEL,                                                  
+                       :COLOR,                                                  
+                       :NEWAUTO,                                                
+                       :PRICE;                                                  
+                                                                                
+        TEMPPOSITION = TEMPPOSITION + 1;                                        
+                                                                                
+      end;                                                                      
+                                                                                
+      ENDLOOP:                                                                  
+                                                                                
+   end;                                                                         
+                                                                                
+   CLOSECURSOR:     procedure;                                                  
+      EXEC SQL CLOSE ICURSOR;                                                   
+      TEMPPOSITION = 1;                                                         
+   end;                                                                         
+                                                                                
+   DISPLAYSCROLLEDDATA:   procedure;                                            
+                                                                                
+      CALL PLIFILL(ADDR(INVENTORYLIST),'00'X,SIZE(INVENTORYLIST));              
+                                                                                
+      POSINDEX = 1;                                                             
+      call OPENCURSOR;                                                          
+      call GETINVENTORYROW;                                                     
+      call CLOSECURSOR;                                                         
+      call SENDDATA;                                                            
+      POSINDEX = 1;                                                             
+                                                                                
+   end;                                                                         
+                                                                                
+   DISPLAYPREVIOUSDATA:   procedure;                                            
+      DCL TEMPSPACES            CHARACTER(20);                                  
+      CALL PLIFILL(ADDR(TEMPSPACES),'00'X,SIZE(TEMPSPACES));                    
+      IF CAMODEL(10) = TEMPSPACES                                               
+         then CURSORPOSITION = CURSORPOSITION - 11;                             
+         else CURSORPOSITION = CURSORPOSITION - 19;                             
+                                                                                
+      IF CURSORPOSITION <= 0 then                                               
+         do;                                                                    
+            CURSORPOSITION = 1;                                                 
+            CAMESSAGE = "REACHED TOP OF LIST";                                  
+         end;                                                                   
+                                                                                
+      call DISPLAYSCROLLEDDATA;                                                 
+   end;                                                                         
+                                                                                
+   DISPLAYNEXTDATA:   procedure;                                                
+                                                                                
+      CAMESSAGE = "";                                                           
+      CURSORPOSITION = CURSORPOSITION - 1;                                      
+      call DISPLAYSCROLLEDDATA;                                                 
+                                                                                
+   end;                                                                         
+                                                                                
+   SENDDATA:   procedure;                                                       
+      CANEXT = 'N';                                                             
+      CAPREV = 'N';                                                             
+      CACURSORPOS = CURSORPOSITION;                                             
+      EXEC CICS RETURN;                                                         
+   end;                                                                         
+                                                                                
+                                                                                
+  END;                                                                          
+                                                                               

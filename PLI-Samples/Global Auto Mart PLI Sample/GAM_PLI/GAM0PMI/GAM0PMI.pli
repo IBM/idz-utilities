@@ -1,0 +1,683 @@
+*process langlvl(saa2) not('ª^') limits(extname(31));                           
+                                                                                
+ /********************************************************************/         
+ /*                                                                  */         
+ /* MODULE NAME    GAM0PMI.PLI                                       */         
+ /*                                                                  */         
+ /* STATEMENT      IBM WebSphere Developer for System z              */         
+ /*                5724-L44                                          */         
+ /*                (c) Copyright IBM Corp. 2006                      */         
+ /*                                                                  */         
+ /* DISCLAIMER OF WARRANTIES                                         */         
+ /* You may copy, modify, and distribute these samples, or their     */         
+ /* modifications, in any form, internally or as part of your        */         
+ /* application or related documentation. These samples have not     */         
+ /* been tested under all conditions and are provided to you by      */         
+ /* IBM without obligation of support of any kind. IBM PROVIDES      */         
+ /* THESE SAMPLES "AS IS" SUBJECT TO ANY STATUTORY WARRANTIES THAT   */         
+ /* CANNOT BE EXCLUDED. IBM MAKES NO WARRANTIES OR CONDITIONS,       */         
+ /* EITHER EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO, THE     */         
+ /* IMPLIED WARRANTIES OR CONDITIONS OF MERCHANTABILITY, FITNESS     */         
+ /* FOR A PARTICULAR PURPOSE, AND NON-INFRINGEMENT REGARDING THESE   */         
+ /* SAMPLES OR TECHNICAL SUPPORT, IF ANY.                            */         
+ /* You will indemnify IBM or third parties that provide IBM         */         
+ /* products ("Third Parties") from and against any third party      */         
+ /* claim arising out of the use, modification or distribution of    */         
+ /* these samples with your application. You may not use the same    */         
+ /* path name as the original files/modules. You must not alter or   */         
+ /* delete any copyright information in the Samples.                 */         
+ /*                                                                  */         
+ /********************************************************************/         
+                                                                                
+   GAM0PMI: Procedure (COMMAREAPTR) options (main);                             
+                                                                                
+   DECLARE COMMAREAPTR          POINTER,                                        
+           LCLBUILD             CHARACTER(1),                                   
+           MAPSIZE              FIXED BIN(15),                                  
+           RESP                 FIXED BIN(31);                                  
+                                                                                
+   %INCLUDE DFHAID;                                                             
+   %INCLUDE GAM0MP1;                                                            
+                                                                                
+   DCL 01 RMAP1                 BASED(ADDR(MAP1O)) UNALIGNED,                   
+          02 *                  CHARACTER(12),                                  
+          02 *                  CHARACTER(9),                                   
+          02 RSELMAKE           CHARACTER(3),                                   
+          02 RMAP1_IO           DIMENSION(20),                                  
+              03 *              CHARACTER(9),                                   
+              03 RNUMMAKE       CHARACTER(3),                                   
+              03 *              CHARACTER(9),                                   
+              03 RVALMAKE       CHARACTER(20),                                  
+          02 *                  CHARACTER(9),                                   
+          02 RMAKMSSG           CHARACTER(60);                                  
+                                                                                
+   DCL 01 LMAP1                 BASED(ADDR(MAP1O)) UNALIGNED,                   
+          02 *                  CHARACTER(12),                                  
+          02 *                  CHARACTER(8),                                   
+          02 LSELMAKE           CHARACTER(3),                                   
+          02 LMAP1_IO           DIMENSION(20),                                  
+              03 *              CHARACTER(8),                                   
+              03 LNUMMAKE       CHARACTER(3),                                   
+              03 *              CHARACTER(8),                                   
+              03 LVALMAKE       CHARACTER(20),                                  
+          02 *                  CHARACTER(8),                                   
+          02 LMAKMSSG           CHARACTER(60);                                  
+                                                                                
+   %INCLUDE GAM0MP2;                                                            
+                                                                                
+   DCL 01 RMAP2                 BASED(ADDR(MAP2O)) UNALIGNED,                   
+          02 *                  CHARACTER(12),                                  
+          02 *                  CHARACTER(9),                                   
+          02 RSELMODL           CHARACTER(3),                                   
+          02 RMAP2_IO           DIMENSION(20),                                  
+              03 *              CHARACTER(9),                                   
+              03 RNUMMODL       CHARACTER(3),                                   
+              03 *              CHARACTER(9),                                   
+              03 RVALMODL       CHARACTER(20),                                  
+          02 *                  CHARACTER(9),                                   
+          02 RMDLMSSG           CHARACTER(60);                                  
+                                                                                
+   DCL 01 LMAP2                 BASED(ADDR(MAP2O)) UNALIGNED,                   
+          02 *                  CHARACTER(12),                                  
+          02 *                  CHARACTER(8),                                   
+          02 LSELMODL           CHARACTER(3),                                   
+          02 LMAP2_IO           DIMENSION(20),                                  
+              03 *              CHARACTER(8),                                   
+              03 LNUMMODL       CHARACTER(3),                                   
+              03 *              CHARACTER(8),                                   
+              03 LVALMODL       CHARACTER(20),                                  
+          02 *                  CHARACTER(8),                                   
+          02 LMDLMSSG           CHARACTER(60);                                  
+                                                                                
+   dcl 1 COMMSIZE                  FIXED BIN(15);                               
+   dcl 1 MAKESELERROR              character(1);                                
+   dcl 1 MODLSELERROR              character(1);                                
+                                                                                
+   DCL USERSELECTIONNUMBER           PICTURE '999';                             
+                                                                                
+   DCL 1 LINKINGCOMMAREA        BASED (COMMAREAPTR),                            
+           2 LINKMAKESELECTED   CHARACTER(1),                                   
+           2 LINKCAMAKE         CHARACTER(20),                                  
+           2 LINKLIST_OF_MAKES  DIMENSION(20),                                  
+              3 LINKVALMAKE     CHARACTER(20),                                  
+           2 LINKLIST_OF_MODELS DIMENSION(20),                                  
+              3 LINKVALMODEL    CHARACTER(20),                                  
+           2 LINKERRMSSG        CHARACTER(60),                                  
+           2 LINKCALCLBUILD     CHARACTER(1);                                   
+                                                                                
+   DCL 1 WCOMMAREA,                                                             
+           2 MAKESELECTED       CHARACTER(1),                                   
+           2 CAMAKE             CHARACTER(20),                                  
+           2 LIST_OF_MAKES      DIMENSION(20),                                  
+              3 VALMAKE         CHARACTER(20),                                  
+           2 LIST_OF_MODELS     DIMENSION(20),                                  
+              3 VALMODEL        CHARACTER(20),                                  
+           2 ERRMSSG            CHARACTER(60),                                  
+           2 CALCLBUILD         CHARACTER(1);                                   
+                                                                                
+   DCL 1 TEMPSELECT             CHARACTER(20) INITIAL((20)'00'X);               
+   DCL 1 EMPTYMAKE              CHARACTER(20) INITIAL((20)'00'X);               
+   DCL 1 MODELSELECTED          CHARACTER(20) INITIAL((20)'00'X);               
+                                                                                
+   MAPSIZE = SIZE(MAP1O);                                                       
+                                                                                
+   IF MAPSIZE = 871 THEN                                                        
+       LCLBUILD = "Y";                                                          
+   ELSE                                                                         
+       LCLBUILD = "N";                                                          
+                                                                                
+   CALCLBUILD = LCLBUILD;                                                       
+                                                                                
+   CALL PLIFILL(ADDR(MAP1O),'00'X, SIZE(MAP1O));                                
+   CALL PLIFILL(ADDR(MAP2O),'00'X, SIZE(MAP2O));                                
+                                                                                
+   ON CONVERSION CALL ERRORMAKE;                                                
+                                                                                
+   MAKESELERROR = "N";                                                          
+   MODLSELERROR = "N";                                                          
+                                                                                
+   if eibcalen = 0 then                                                         
+   do;                                                                          
+      CALL PLIFILL(ADDR(WCOMMAREA),'00'X, SIZE(WCOMMAREA));                     
+      CALCLBUILD = LCLBUILD;                                                    
+      MAKESELECTED="N";                                                         
+      CALL GETMAKES;                                                            
+      EXEC CICS RETURN TRANSID('GPMI') COMMAREA( WCOMMAREA );                   
+   end;                                                                         
+   ELSE IF EIBCALEN ^= SIZE(WCOMMAREA) THEN                                     
+   DO;                                                                          
+      EXEC CICS RETURN;                                                         
+   END;                                                                         
+   ELSE                                                                         
+   DO;                                                                          
+      WCOMMAREA = LINKINGCOMMAREA;                                              
+   END;                                                                         
+                                                                                
+   SELECT(EIBAID);                                                              
+                                                                                
+   WHEN(DFHCLEAR)                                                               
+        do;                                                                     
+        if MAKESELECTED = "Y" then call SENDMODELMAP;                           
+        else call SENDMAKEMAP;                                                  
+        end;                                                                    
+                                                                                
+   WHEN(DFHPF12)                                                                
+        do;                                                                     
+           CALL PLIFILL(ADDR(WCOMMAREA),'00'X,SIZE(WCOMMAREA));                 
+           MAKESELECTED="N";                                                    
+           call GETMAKES;                                                       
+        end;                                                                    
+                                                                                
+   WHEN(DFHPF3)                                                                 
+        do;                                                                     
+         EXEC CICS SYNCPOINT;                                                   
+         EXEC CICS SEND                                                         
+                   CONTROL                                                      
+                   ERASE                                                        
+                   FREEKB;                                                      
+                                                                                
+         EXEC CICS RETURN;                                                      
+        end;                                                                    
+                                                                                
+   WHEN(DFHENTER)                                                               
+        do;                                                                     
+        if MAKESELECTED = "N" then                                              
+        do;                                                                     
+           call GETMAKEMAP;                                                     
+        end;                                                                    
+        else                                                                    
+        do;                                                                     
+           call GETMODELMAP;                                                    
+        end;                                                                    
+                                                                                
+        end;                                                                    
+                                                                                
+   OTHERWISE                                                                    
+      do;                                                                       
+      IF LCLBUILD = "Y" THEN                                                    
+      DO;                                                                       
+         LMDLMSSG = "Invalid key pressed.";                                     
+         LMAKMSSG = "Invalid key pressed.";                                     
+      END;                                                                      
+      ELSE                                                                      
+      DO;                                                                       
+         RMDLMSSG = "INVALID KEY PRESSED.";                                     
+         RMAKMSSG = "INVALID KEY PRESSED.";                                     
+      END;                                                                      
+      if MAKESELECTED = "Y" then call SENDMODELMAP;                             
+      else call SENDMAKEMAP;                                                    
+      end;                                                                      
+                                                                                
+   end;                                                                         
+                                                                                
+   EXEC CICS RETURN TRANSID('GPMI') COMMAREA( WCOMMAREA );                      
+                                                                                
+   GETMAKES: PROCEDURE;                                                         
+      EXEC CICS LINK PROGRAM('GAM0PMM') COMMAREA( WCOMMAREA );                  
+      CALL SENDMAKEMAP;                                                         
+   END;                                                                         
+                                                                                
+   SENDMAKEMAP: procedure;                                                      
+                                                                                
+      DCL TRUELENGTH    FIXED DECIMAL(2,0);                                     
+      DCL CLENGTH       FIXED DECIMAL(2,0);                                     
+      DCL X             FIXED DECIMAL(2,0);                                     
+      DCL I             FIXED DECIMAL(2,0);                                     
+      DCL TWO           FIXED DECIMAL(2,0);                                     
+      DCL TEMPINDEX     FIXED DECIMAL(2,0);                                     
+      DCL DIVISORVALUE  FIXED DECIMAL(2,0);                                     
+      DCL DISPLAYNUMBER         PIC '99';                                       
+                                                                                
+      TEMPINDEX = 1;                                                            
+      TRUELENGTH = 0;                                                           
+      X = 1;                                                                    
+      I = 1;                                                                    
+      TWO = 2;                                                                  
+      Do Forever;                                                               
+         if TEMPINDEX > 20 then                                                 
+            goto EXITLOOP;                                                      
+         IF VALMAKE(TEMPINDEX) ^= EMPTYMAKE THEN                                
+            DO;                                                                 
+               TRUELENGTH = TRUELENGTH+1;                                       
+            END;                                                                
+         TEMPINDEX = TEMPINDEX+1;                                               
+      end;                                                                      
+                                                                                
+      EXITLOOP:                                                                 
+                                                                                
+      DIVISORVALUE = TRUELENGTH / 2;                                            
+                                                                                
+      IF (DIVISORVALUE * 2) ^= TRUELENGTH THEN                                  
+         CLENGTH = TRUELENGTH + 1;                                              
+      ELSE                                                                      
+         CLENGTH = TRUELENGTH;                                                  
+                                                                                
+      DO FOREVER;                                                               
+         IF X > CLENGTH / 2 THEN                                                
+            GOTO EXITFIRSTLOOP;                                                 
+                                                                                
+         DISPLAYNUMBER = X;                                                     
+         IF LCLBUILD = "Y" THEN                                                 
+         DO;                                                                    
+            LNUMMAKE(I) = DISPLAYNUMBER;                                        
+            LVALMAKE(I) = VALMAKE(X);                                           
+         END;                                                                   
+         ELSE                                                                   
+         DO;                                                                    
+            RNUMMAKE(I) = DISPLAYNUMBER;                                        
+            RVALMAKE(I) = VALMAKE(X);                                           
+         END;                                                                   
+         X = X + 1;                                                             
+         I = I + 2;                                                             
+      END;                                                                      
+                                                                                
+      EXITFIRSTLOOP:                                                            
+                                                                                
+      I = 2;                                                                    
+                                                                                
+      DO FOREVER;                                                               
+         IF X > TRUELENGTH THEN                                                 
+            GOTO EXITSECONDLOOP;                                                
+         DISPLAYNUMBER = X;                                                     
+         IF LCLBUILD = "Y" THEN                                                 
+         DO;                                                                    
+            LNUMMAKE(I) = DISPLAYNUMBER;                                        
+            LVALMAKE(I) = VALMAKE(X);                                           
+         END;                                                                   
+         ELSE                                                                   
+         DO;                                                                    
+            RNUMMAKE(I) = DISPLAYNUMBER;                                        
+            RVALMAKE(I) = VALMAKE(X);                                           
+         END;                                                                   
+         X = X + 1;                                                             
+         I = I + 2;                                                             
+      END;                                                                      
+      EXITSECONDLOOP:                                                           
+                                                                                
+      IF LCLBUILD = "Y" THEN                                                    
+      DO;                                                                       
+         LSELMAKE = "___";                                                      
+         EXEC CICS                                                              
+              SEND MAP('MAP1')                                                  
+              MAPSET('GAM0MP1')                                                 
+              FROM( LMAP1  )                                                    
+              ERASE;                                                            
+      END;                                                                      
+      ELSE                                                                      
+      DO;                                                                       
+         RSELMAKE = "___";                                                      
+         EXEC CICS                                                              
+              SEND MAP('MAP1')                                                  
+              MAPSET('GAM0MP1')                                                 
+              FROM (RMAP1)                                                      
+              ERASE;                                                            
+      END;                                                                      
+   END;                                                                         
+                                                                                
+   GETMAKEMAP:  procedure;                                                      
+                                                                                
+      EXEC CICS IGNORE CONDITION MAPFAIL;                                       
+      IF LCLBUILD = "Y" THEN                                                    
+      DO;                                                                       
+         EXEC CICS RECEIVE MAP('MAP1')                                          
+                   MAPSET('GAM0MP1')                                            
+                   INTO( LMAP1 );                                               
+      END;                                                                      
+      ELSE                                                                      
+      DO;                                                                       
+         EXEC CICS RECEIVE MAP('MAP1')                                          
+                   MAPSET('GAM0MP1')                                            
+                   INTO( RMAP1 );                                               
+      END;                                                                      
+                                                                                
+      call PROCESSMAKEMAP;                                                      
+                                                                                
+      IF MAKESELERROR = "Y" then                                                
+      do;                                                                       
+         call SENDMAKEMAP;                                                      
+      end;                                                                      
+      else                                                                      
+      do;                                                                       
+         call GETMODELS;                                                        
+      end;                                                                      
+                                                                                
+   END;                                                                         
+                                                                                
+   GETMODELS: PROCEDURE;                                                        
+      EXEC CICS LINK PROGRAM('GAM0PMM') COMMAREA( WCOMMAREA );                  
+      CALL SENDMODELMAP;                                                        
+   END;                                                                         
+                                                                                
+   SENDMODELMAP: procedure;                                                     
+      DCL TRUELENGTH    FIXED DECIMAL(2,0);                                     
+      DCL CLENGTH       FIXED DECIMAL(2,0);                                     
+      DCL X             FIXED DECIMAL(2,0);                                     
+      DCL I             FIXED DECIMAL(2,0);                                     
+      DCL TWO           FIXED DECIMAL(2,0);                                     
+      DCL TEMPINDEX     FIXED DECIMAL(2,0);                                     
+      DCL DIVISORVALUE  FIXED DECIMAL(2,0);                                     
+      DCL DISPLAYNUMBER         PIC '99';                                       
+                                                                                
+      TEMPINDEX = 1;                                                            
+      TRUELENGTH = 0;                                                           
+      X = 1;                                                                    
+      I = 1;                                                                    
+      TWO = 2;                                                                  
+      Do Forever;                                                               
+         if TEMPINDEX > 20 then                                                 
+            goto EXITLOOP;                                                      
+         IF VALMODEL (TEMPINDEX) ^= EMPTYMAKE THEN                              
+            DO;                                                                 
+               TRUELENGTH = TRUELENGTH+1;                                       
+            END;                                                                
+         TEMPINDEX = TEMPINDEX+1;                                               
+      end;                                                                      
+                                                                                
+      EXITLOOP:                                                                 
+                                                                                
+      DIVISORVALUE = TRUELENGTH / 2;                                            
+                                                                                
+      IF (DIVISORVALUE * 2) ^= TRUELENGTH THEN                                  
+         CLENGTH = TRUELENGTH + 1;                                              
+      ELSE                                                                      
+         CLENGTH = TRUELENGTH;                                                  
+                                                                                
+      DO FOREVER;                                                               
+         IF X > CLENGTH / 2 THEN                                                
+            GOTO EXITFIRSTLOOP;                                                 
+                                                                                
+         DISPLAYNUMBER = X;                                                     
+         IF LCLBUILD = "Y" THEN                                                 
+         DO;                                                                    
+            LNUMMODL(I) = DISPLAYNUMBER;                                        
+            LVALMODL(I) = VALMODEL(X);                                          
+         END;                                                                   
+         ELSE                                                                   
+         DO;                                                                    
+            RNUMMODL(I) = DISPLAYNUMBER;                                        
+            RVALMODL(I) = VALMODEL(X);                                          
+         END;                                                                   
+         X = X + 1;                                                             
+         I = I + 2;                                                             
+      END;                                                                      
+                                                                                
+      EXITFIRSTLOOP:                                                            
+                                                                                
+      I = 2;                                                                    
+                                                                                
+      DO FOREVER;                                                               
+         IF X > TRUELENGTH THEN                                                 
+            GOTO EXITSECONDLOOP;                                                
+         DISPLAYNUMBER = X;                                                     
+         IF LCLBUILD = "Y" THEN                                                 
+         DO;                                                                    
+            LNUMMODL(I) = DISPLAYNUMBER;                                        
+            LVALMODL(I) = VALMODEL(X);                                          
+         END;                                                                   
+         ELSE                                                                   
+         DO;                                                                    
+            RNUMMODL(I) = DISPLAYNUMBER;                                        
+            RVALMODL(I) = VALMODEL(X);                                          
+         END;                                                                   
+         X = X + 1;                                                             
+         I = I + 2;                                                             
+      END;                                                                      
+      EXITSECONDLOOP:                                                           
+                                                                                
+      IF LCLBUILD = "Y" THEN                                                    
+      DO;                                                                       
+         LSELMODL = "___";                                                      
+         EXEC CICS                                                              
+              SEND MAP('MAP2')                                                  
+              MAPSET('GAM0MP2')                                                 
+              FROM( LMAP2 )                                                     
+              ERASE;                                                            
+      END;                                                                      
+      ELSE                                                                      
+      DO;                                                                       
+         RSELMODL = "___";                                                      
+         EXEC CICS                                                              
+              SEND MAP('MAP2')                                                  
+              MAPSET('GAM0MP2')                                                 
+              FROM( RMAP2 )                                                     
+              ERASE;                                                            
+      END;                                                                      
+                                                                                
+   END;                                                                         
+                                                                                
+   GETMODELMAP: procedure;                                                      
+                                                                                
+      DCL 01 PASSAREA,                                                          
+             02 PASSMAKESELECTED     CHARACTER(20),                             
+             02 PASSMODLSELECTED     CHARACTER(20),                             
+             02 *                    CHARACTER(2),                              
+             02 *                    SIGNED FIXED BIN(31),                      
+             02 *                    CHARACTER(801);                            
+                                                                                
+      EXEC CICS IGNORE CONDITION MAPFAIL;                                       
+      IF LCLBUILD = "Y" THEN                                                    
+      DO;                                                                       
+         EXEC CICS RECEIVE MAP('MAP2')                                          
+                   MAPSET('GAM0MP2')                                            
+                   INTO( LMAP2 );                                               
+      END;                                                                      
+      ELSE                                                                      
+      DO;                                                                       
+         EXEC CICS RECEIVE MAP('MAP2')                                          
+                   MAPSET('GAM0MP2')                                            
+                   INTO( RMAP2 );                                               
+      END;                                                                      
+                                                                                
+      call PROCESSMODELMAP;                                                     
+                                                                                
+      IF MODLSELERROR = "Y" then                                                
+      do;                                                                       
+         call SENDMODELMAP;                                                     
+      end;                                                                      
+      else                                                                      
+      do;                                                                       
+          CALL PLIFILL(ADDR(PASSAREA),'00'X,SIZE(PASSAREA));                    
+          PASSMAKESELECTED = CAMAKE;                                            
+          PASSMODLSELECTED = MODELSELECTED;                                     
+          EXEC CICS XCTL PROGRAM('GAM0PII') COMMAREA (PASSAREA);                
+      end;                                                                      
+                                                                                
+   END;                                                                         
+                                                                                
+   PROCESSMAKEMAP: procedure;                                                   
+      DCL TEMPMAKE                 CHARACTER(20) INITIAL((20) '00'x);           
+                                                                                
+      IF LCLBUILD = "Y" THEN                                                    
+      DO;                                                                       
+         IF SUBSTR(LSELMAKE,1,1) = "_" THEN                                     
+         DO;                                                                    
+            SUBSTR(LSELMAKE,1,1) = ' ';                                         
+         END;                                                                   
+         IF SUBSTR(LSELMAKE,2,1) = "_" THEN                                     
+         DO;                                                                    
+            SUBSTR(LSELMAKE,2,1) = ' ';                                         
+         END;                                                                   
+         IF SUBSTR(LSELMAKE,3,1) = "_" THEN                                     
+         DO;                                                                    
+            SUBSTR(LSELMAKE,3,1) = ' ';                                         
+         END;                                                                   
+                                                                                
+         USERSELECTIONNUMBER = LSELMAKE;                                        
+         IF USERSELECTIONNUMBER > 0 & USERSELECTIONNUMBER < 21 THEN             
+         DO;                                                                    
+            IF VALMAKE(USERSELECTIONNUMBER) ^= TEMPMAKE THEN                    
+            DO;                                                                 
+               CAMAKE = VALMAKE(USERSELECTIONNUMBER);                           
+               MAKESELECTED = "Y";                                              
+            END;                                                                
+            ELSE                                                                
+            DO;                                                                 
+               IF LMAKMSSG ^= "INVALID SELECTION PLEASE TRY AGAIN!" THEN        
+               DO;                                                              
+                  LMAKMSSG = "PLEASE MAKE A VALID SELECTION";                   
+               END;                                                             
+               MAKESELERROR = "Y";                                              
+            END;                                                                
+         END;                                                                   
+         ELSE                                                                   
+         DO;                                                                    
+            IF LMAKMSSG ^= "INVALID SELECTION PLEASE TRY AGAIN!" THEN           
+            DO;                                                                 
+               LMAKMSSG = "PLEASE MAKE A VALID SELECTION";                      
+            END;                                                                
+            MAKESELERROR = "Y";                                                 
+         END;                                                                   
+      END;                                                                      
+      ELSE                                                                      
+      DO;                                                                       
+         IF SUBSTR(RSELMAKE,1,1) = "_" THEN                                     
+         DO;                                                                    
+            SUBSTR(RSELMAKE,1,1) = ' ';                                         
+         END;                                                                   
+         IF SUBSTR(RSELMAKE,2,1) = "_" THEN                                     
+         DO;                                                                    
+            SUBSTR(RSELMAKE,2,1) = ' ';                                         
+         END;                                                                   
+         IF SUBSTR(RSELMAKE,3,1) = "_" THEN                                     
+         DO;                                                                    
+            SUBSTR(RSELMAKE,3,1) = ' ';                                         
+         END;                                                                   
+                                                                                
+         USERSELECTIONNUMBER = RSELMAKE;                                        
+         IF USERSELECTIONNUMBER > 0 & USERSELECTIONNUMBER < 21 THEN             
+         DO;                                                                    
+            IF VALMAKE(USERSELECTIONNUMBER) ^= TEMPMAKE THEN                    
+            DO;                                                                 
+               CAMAKE = VALMAKE(USERSELECTIONNUMBER);                           
+               MAKESELECTED = "Y";                                              
+            END;                                                                
+            ELSE                                                                
+            DO;                                                                 
+               IF RMAKMSSG ^= "INVALID SELECTION PLEASE TRY AGAIN!" THEN        
+               DO;                                                              
+                  RMAKMSSG = "PLEASE MAKE A VALID SELECTION";                   
+               END;                                                             
+               MAKESELERROR = "Y";                                              
+            END;                                                                
+         END;                                                                   
+         ELSE                                                                   
+         DO;                                                                    
+            IF RMAKMSSG ^= "INVALID SELECTION PLEASE TRY AGAIN!" THEN           
+            DO;                                                                 
+               RMAKMSSG = "PLEASE MAKE A VALID SELECTION";                      
+            END;                                                                
+            MAKESELERROR = "Y";                                                 
+         END;                                                                   
+      END;                                                                      
+   END;                                                                         
+                                                                                
+   PROCESSMODELMAP: procedure;                                                  
+      DCL TEMPMAKE                 CHARACTER(20) INITIAL((20) '00'x);           
+                                                                                
+      IF LCLBUILD = "Y" THEN                                                    
+      DO;                                                                       
+         IF SUBSTR(LSELMODL,1,1) = "_" THEN                                     
+         DO;                                                                    
+            SUBSTR(LSELMODL,1,1) = ' ';                                         
+         END;                                                                   
+         IF SUBSTR(LSELMODL,2,1) = "_" THEN                                     
+         DO;                                                                    
+            SUBSTR(LSELMODL,2,1) = ' ';                                         
+         END;                                                                   
+         IF SUBSTR(LSELMODL,3,1) = "_" THEN                                     
+         DO;                                                                    
+            SUBSTR(LSELMODL,3,1) = ' ';                                         
+         END;                                                                   
+                                                                                
+         USERSELECTIONNUMBER = LSELMODL;                                        
+         IF USERSELECTIONNUMBER > 0 & USERSELECTIONNUMBER < 21 THEN             
+         DO;                                                                    
+            IF VALMODEL(USERSELECTIONNUMBER) ^= TEMPMAKE THEN                   
+            DO;                                                                 
+               MODELSELECTED = VALMODEL(USERSELECTIONNUMBER);                   
+            END;                                                                
+            ELSE                                                                
+            DO;                                                                 
+               IF LMDLMSSG ^= "INVALID SELECTION PLEASE TRY AGAIN!" THEN        
+               DO;                                                              
+                  LMDLMSSG = "PLEASE MAKE A VALID SELECTION";                   
+               END;                                                             
+               MODLSELERROR = "Y";                                              
+            END;                                                                
+         END;                                                                   
+         ELSE                                                                   
+         DO;                                                                    
+            IF LMDLMSSG ^= "INVALID SELECTION PLEASE TRY AGAIN!" THEN           
+            DO;                                                                 
+               LMDLMSSG = "PLEASE MAKE A VALID SELECTION";                      
+            END;                                                                
+            MODLSELERROR = "Y";                                                 
+         END;                                                                   
+      END;                                                                      
+      ELSE                                                                      
+      DO;                                                                       
+         IF SUBSTR(RSELMODL,1,1) = "_" THEN                                     
+         DO;                                                                    
+            SUBSTR(RSELMODL,1,1) = ' ';                                         
+         END;                                                                   
+         IF SUBSTR(RSELMODL,2,1) = "_" THEN                                     
+         DO;                                                                    
+            SUBSTR(RSELMODL,2,1) = ' ';                                         
+         END;                                                                   
+         IF SUBSTR(RSELMODL,3,1) = "_" THEN                                     
+         DO;                                                                    
+            SUBSTR(RSELMODL,3,1) = ' ';                                         
+         END;                                                                   
+                                                                                
+         USERSELECTIONNUMBER = RSELMODL;                                        
+         IF USERSELECTIONNUMBER > 0 & USERSELECTIONNUMBER < 21 THEN             
+         DO;                                                                    
+            IF VALMODEL(USERSELECTIONNUMBER) ^= TEMPMAKE THEN                   
+            DO;                                                                 
+               MODELSELECTED = VALMODEL(USERSELECTIONNUMBER);                   
+            END;                                                                
+            ELSE                                                                
+            DO;                                                                 
+               IF RMDLMSSG ^= "INVALID SELECTION PLEASE TRY AGAIN!" THEN        
+               DO;                                                              
+                  RMDLMSSG = "PLEASE MAKE A VALID SELECTION";                   
+               END;                                                             
+               MODLSELERROR = "Y";                                              
+            END;                                                                
+         END;                                                                   
+         ELSE                                                                   
+         DO;                                                                    
+            IF RMDLMSSG ^= "INVALID SELECTION PLEASE TRY AGAIN!" THEN           
+            DO;                                                                 
+               RMDLMSSG = "PLEASE MAKE A VALID SELECTION";                      
+            END;                                                                
+            MODLSELERROR = "Y";                                                 
+         END;                                                                   
+      END;                                                                      
+   END;                                                                         
+                                                                                
+   ERRORMAKE: PROCEDURE;                                                        
+         USERSELECTIONNUMBER=0;                                                 
+         ONSOURCE() = 0;                                                        
+         ONCHAR() = '0';                                                        
+         REVERT CONVERSION;                                                     
+         IF LCLBUILD = "Y" THEN                                                 
+         DO;                                                                    
+            LMAKMSSG = "INVALID SELECTION PLEASE TRY AGAIN!";                   
+            LMDLMSSG = "INVALID SELECTION PLEASE TRY AGAIN!";                   
+            LSELMAKE='0';                                                       
+            LSELMODL='0';                                                       
+         END;                                                                   
+         ELSE                                                                   
+         DO;                                                                    
+            RMAKMSSG = "INVALID SELECTION PLEASE TRY AGAIN!";                   
+            RMDLMSSG = "INVALID SELECTION PLEASE TRY AGAIN!";                   
+            RSELMAKE = '0';                                                     
+            RSELMODL = '0';                                                     
+         END;                                                                   
+         MAKESELERROR = "Y";                                                    
+         MODLSELERROR = "Y";                                                    
+                                                                                
+   END;                                                                         
+                                                                                
+   END;                                                                        

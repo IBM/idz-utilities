@@ -1,0 +1,552 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?eclipse version="3.0"?>
+<plugin>
+
+     <extension
+         id="com.ibm.ftt.api.samples.actionSets"
+         name="%apiSample.actionSets"
+         point="org.eclipse.ui.actionSets">
+      <actionSet
+            label="com.ibm.ftt.api.samples.actionSet1"
+            description="Action set for the API samples"
+            visible="true"
+            id="com.ibm.ftt.api.samples.actionSet1">
+         <menu
+               label="%apiMenu.title"
+               id="com.ibm.ftt.api.samples.apiMenu">
+            <separator name="com.ibm.ftt.api.samples.apiMenu.resourcesAPI"/>
+         </menu>
+         <action
+               label="%apiMenu.samples.getContents"
+               class="com.ibm.ftt.api.samples.resources.GetContentsAction"
+               style="push"
+               menubarPath="com.ibm.ftt.api.samples.apiMenu/com.ibm.ftt.api.samples.apiMenu.resourcesAPI"
+               id="com.ibm.ftt.api.samples.getContentAction"/>
+         <action
+               label="%apiMenu.samples.listSystems"
+               class="com.ibm.ftt.api.samples.resources.ListSystemsAction"
+               style="push"
+               menubarPath="com.ibm.ftt.api.samples.apiMenu/com.ibm.ftt.api.samples.apiMenu.resourcesAPI"
+               id="com.ibm.ftt.api.samples.listSystemsAction"/>
+         <action
+               label="%apiMenu.samples.listProjects"
+               class="com.ibm.ftt.api.samples.resources.ListProjectsAction"
+               style="push"
+               menubarPath="com.ibm.ftt.api.samples.apiMenu/com.ibm.ftt.api.samples.apiMenu.resourcesAPI"
+               id="com.ibm.ftt.api.samples.listProjectsAction"/>
+         <action
+               label="%apiMenu.samples.findResource"
+               class="com.ibm.ftt.api.samples.resources.FindResourceAction"
+               style="push"
+               menubarPath="com.ibm.ftt.api.samples.apiMenu/com.ibm.ftt.api.samples.apiMenu.resourcesAPI"
+               id="com.ibm.ftt.api.samples.findResource"/>
+         <action
+               label="%apiMenu.samples.deleteAllProblems"
+               class="com.ibm.ftt.api.samples.resources.DeleteAllProblemsAction"
+               style="push"
+               menubarPath="com.ibm.ftt.api.samples.apiMenu/com.ibm.ftt.api.samples.apiMenu.resourcesAPI"
+               id="com.ibm.ftt.api.samples.deleteAllProblemsAction"/>
+         <action
+               label="%apiMenu.samples.listProperties"
+               class="com.ibm.ftt.api.samples.resources.ListPropertiesAction"
+               style="push"
+               menubarPath="com.ibm.ftt.api.samples.apiMenu/com.ibm.ftt.api.samples.apiMenu.resourcesAPI"
+               id="com.ibm.ftt.api.samples.listPropertiesAction"/>
+      </actionSet>
+   </extension>
+   <extension
+      id="com.ibm.ftt.api.samples.popupMenus"
+      name="%apiSample.popupMenus"
+      point="org.eclipse.ui.popupMenus">
+      <!-- Create Member Action -->
+      <!-- TODO: Need a way to contribute action for PDS, members and seq data set -->
+      <objectContribution
+         adaptable="false"
+         objectClass="com.ibm.ftt.resources.zos.zosphysical.IZOSResourceReference"
+         id="com.ibm.ftt.api.samples.physical.patitionedDataset">
+         <menu
+            id="com.ibm.ftt.api.samples.PopupMenu"
+            label="%apiMenu.title.popup">
+            <separator name="group1"/>
+         </menu>
+         <action
+            label="%apiMenu.samples.createMember"
+            class="com.ibm.ftt.api.samples.resources.CreateMemberAction"
+            menubarPath="com.ibm.ftt.api.samples.PopupMenu/group1"
+            id="com.ibm.ftt.api.samples.physical.createMember"/>
+      </objectContribution>
+      <objectContribution
+         adaptable="false"
+         objectClass="com.ibm.ftt.projects.zos.zoslogical.ILZOSPartitionedDataSet"
+         id="com.ibm.ftt.api.samples.logical.patitionedDataset">
+         <menu
+            id="com.ibm.ftt.api.samples.PopupMenu"
+            label="%apiMenu.title.popup">
+            <separator name="group1"/>
+         </menu>
+		 <filter name="physicalResourceAvailable" value="true"/>
+         <action
+            label="%apiMenu.samples.createMember"
+            class="com.ibm.ftt.api.samples.resources.CreateMemberAction"
+            menubarPath="com.ibm.ftt.api.samples.PopupMenu/group1"
+            id="com.ibm.ftt.api.samples.logical.createMember"/>
+      </objectContribution>
+      <objectContribution
+         adaptable="false"
+         objectClass="com.ibm.ftt.projects.zos.zoslogical.ILZOSDataSetMember"
+         nameFilter="*.jcl"
+         id="com.ibm.ftt.api.samples.physical.dataSetMember">
+         <menu
+            id="com.ibm.ftt.api.samples.PopupMenu"
+            label="%apiMenu.title.popup">
+            <separator name="group1"/>
+         </menu>
+		 <filter name="physicalResourceAvailable" value="true"/>
+         <action
+            label="%apiMenu.samples.submitAndWait"
+            class="com.ibm.ftt.api.samples.resources.SubmitAndWaitAction"
+            menubarPath="com.ibm.ftt.api.samples.PopupMenu/group1"
+            enablesFor="1"
+            id="com.ibm.ftt.api.samples.physical.submitMember"/>
+      </objectContribution>      
+      <!-- Delete Problems Action -->
+      <objectContribution
+         adaptable="false"
+         objectClass="com.ibm.ftt.projects.zos.zoslogical.ILZOSDataSetMember"
+         id="com.ibm.ftt.api.samples.logical.datasetMember">
+		 <filter name="physicalResourceAvailable" value="true"/>
+         <action
+            label="%apiMenu.samples.deleteProblems"
+            class="com.ibm.ftt.api.samples.resources.DeleteProblemsAction"
+            menubarPath="com.ibm.ftt.api.samples.PopupMenu/group1"
+            id="com.ibm.ftt.api.samples.logical.deleteProblems"/>
+      </objectContribution>
+      <objectContribution
+         adaptable="false"
+         objectClass="com.ibm.ftt.projects.zos.zoslogical.ILZOSSequentialDataSet"
+         id="com.ibm.ftt.api.samples.logical.sequentialDataset">
+         <menu
+            id="com.ibm.ftt.api.samples.PopupMenu"
+            label="%apiMenu.title.popup">
+            <separator name="group1"/>
+         </menu>
+		 <filter name="physicalResourceAvailable" value="true"/>
+         <action
+            label="%apiMenu.samples.deleteProblems"
+            class="com.ibm.ftt.api.samples.resources.DeleteProblemsAction"
+            menubarPath="com.ibm.ftt.api.samples.PopupMenu/group1"
+            id="com.ibm.ftt.api.samples.logical.deleteProblems"/>
+      </objectContribution>
+      <!-- Add Problems Action -->
+      <viewerContribution
+         targetID="com.ibm.ftt.lpex.systemz.SystemzLpex.EditorContext"
+         id="com.ibm.ftt.api.samples.lpexActions">
+         <menu
+            id="com.ibm.ftt.api.samples.PopupMenu"
+            label="%apiMenu.title.popup">
+            <separator name="group1"/>
+         </menu>
+         <action
+            label="%apiMenu.samples.addProblems"
+            class="com.ibm.ftt.api.samples.resources.AddProblemsAction"
+            menubarPath="com.ibm.ftt.api.samples.PopupMenu/group1"
+            id="com.ibm.ftt.api.samples.addProblems"/>
+      </viewerContribution>
+      <objectContribution
+         adaptable="false"
+         objectClass="com.ibm.ftt.projects.core.logical.ILogicalSubProject"
+         id="com.ibm.ftt.api.samples.PopupMenu">
+         <menu
+            id="com.ibm.ftt.api.samples.PopupMenu"
+            label="%apiMenu.title.popup">
+            <separator name="group1"/>
+         </menu>
+      </objectContribution>
+      <!-- Sample Natures .. add/remove actions -->
+      <objectContribution
+         adaptable="false"
+         objectClass="com.ibm.ftt.projects.core.logical.ILogicalSubProject"
+         id="com.ibm.ftt.api.samples.addnature">
+         <visibility>
+            <not>
+               <objectState
+                     name="projectNature"
+                     value="com.ibm.ftt.api.samples.samplenature">
+               </objectState>
+            </not>
+         </visibility>
+         <action
+            label="%apiMenu.samples.addNature"
+            class="com.ibm.ftt.api.samples.natures.AddSubProjectNatureAction"
+            menubarPath="com.ibm.ftt.api.samples.PopupMenu/group1"
+            id="com.ibm.ftt.api.samples.addnatureaction"/>
+      </objectContribution>
+      <objectContribution
+         adaptable="false"
+         objectClass="com.ibm.ftt.projects.core.logical.ILogicalSubProject"
+         id="com.ibm.ftt.api.samples.removenature">
+         <filter
+            value="com.ibm.ftt.api.samples.samplenature"
+            name="projectNature"/>
+         <action
+            label="%apiMenu.samples.removeNature"
+            class="com.ibm.ftt.api.samples.natures.RemoveSubProjectNatureAction"
+            menubarPath="com.ibm.ftt.api.samples.PopupMenu/group1"
+            id="com.ibm.ftt.api.samples.removenatureaction"/>
+      </objectContribution>
+      <!-- Sample Builder .. add/remove actions -->
+      <objectContribution
+         adaptable="false"
+         objectClass="com.ibm.ftt.projects.core.logical.ILogicalSubProject"
+         id="com.ibm.ftt.api.samples.addbuilder">
+         <visibility>
+            <not>
+               <objectState
+                     name="projectBuilder"
+                     value="com.ibm.ftt.api.samples.samplebuilder">
+               </objectState>
+            </not>
+         </visibility>
+         <action
+            label="%apiMenu.samples.addBuilder"
+            class="com.ibm.ftt.api.samples.builders.AddSubProjectBuilderAction"
+            menubarPath="com.ibm.ftt.api.samples.PopupMenu/group1"
+            id="com.ibm.ftt.api.samples.addbuilderaction"/>
+      </objectContribution>
+      <objectContribution
+         adaptable="false"
+         objectClass="com.ibm.ftt.projects.core.logical.ILogicalSubProject"
+         id="com.ibm.ftt.api.samples.removebuilder">
+         <filter
+            value="com.ibm.ftt.api.samples.samplebuilder"
+            name="projectBuilder"/>
+         <action
+            label="%apiMenu.samples.removeBuilder"
+            class="com.ibm.ftt.api.samples.builders.RemoveSubProjectBuilderAction"
+            menubarPath="com.ibm.ftt.api.samples.PopupMenu/group1"
+            id="com.ibm.ftt.api.samples.removebuilderaction"/>
+      </objectContribution>
+      <!-- Sample for EditorOpener -->
+      <objectContribution
+         adaptable="false"
+         objectClass="com.ibm.ftt.projects.core.logical.ILogicalFile"
+         id="com.ibm.ftt.api.samples.openfilelogical">
+         <menu
+            id="com.ibm.ftt.api.samples.PopupMenu"
+            label="%apiMenu.title.popup">
+            <separator name="group1"/>
+         </menu>
+		 <filter name="physicalResourceAvailable" value="true"/>
+         <action
+            label="%apiMenu.samples.openFile"
+            class="com.ibm.ftt.api.samples.resources.OpenFileAction"
+            menubarPath="com.ibm.ftt.api.samples.PopupMenu/group1"
+            id="com.ibm.ftt.api.samples.openfilelogicalaction"/>
+      </objectContribution>
+      <objectContribution
+         adaptable="false"
+         objectClass="com.ibm.ftt.resources.zos.zosphysical.IZOSResourceReference"
+         id="com.ibm.ftt.api.samples.openfilephysical">
+         <action
+            label="%apiMenu.samples.openFile"
+            class="com.ibm.ftt.api.samples.resources.OpenFileAction"
+            menubarPath="com.ibm.ftt.api.samples.PopupMenu/group1"
+            id="com.ibm.ftt.api.samples.openfilephysicalaction"/>
+      </objectContribution>
+      <objectContribution
+         adaptable="false"
+         objectClass="com.ibm.ftt.rse.mvs.client.subsystems.MVSFileSubSystem"
+         id="com.ibm.ftt.api.samples.allocatepds">
+         <menu
+            id="com.ibm.ftt.api.samples.PopupMenu"
+            label="%apiMenu.title.popup">
+            <separator name="group1"/>
+         </menu>
+         <action
+            label="%apiMenu.samples.allocatePDS"
+            class="com.ibm.ftt.api.samples.resources.AllocatePDSAction"
+            menubarPath="com.ibm.ftt.api.samples.PopupMenu/group1"
+            id="com.ibm.ftt.api.samples.allocatepdsaction"/>
+         <action
+            label="%apiMenu.samples.createPropertyGroup"
+            class="com.ibm.ftt.api.samples.resources.CreatePropertyGroupAction"
+            menubarPath="com.ibm.ftt.api.samples.PopupMenu/group1"
+            id="com.ibm.ftt.api.samples.createpropertygroupaction"/>     
+      </objectContribution>
+      <!-- Sample for subscription to events on a physical resource -->
+      <objectContribution
+         adaptable="false"
+         objectClass="com.ibm.ftt.resources.core.physical.IResourceReference"
+         id="com.ibm.ftt.api.samples.subscribephysical">
+         <menu
+            id="com.ibm.ftt.api.samples.PopupMenu"
+            label="%apiMenu.title">
+            <separator name="group1"/>
+         </menu>
+         <action
+            label="%apiMenu.samples.subscribeToEvents"
+            class="com.ibm.ftt.api.samples.notification.SubscribeAction"
+            menubarPath="com.ibm.ftt.api.samples.PopupMenu/group1"
+            id="com.ibm.ftt.api.samples.subscribephysicalaction"/>
+      </objectContribution>      
+      <!-- Sample for subscription to events on a logical resource -->
+      <objectContribution
+         adaptable="false"
+         objectClass="com.ibm.ftt.projects.core.logical.ILogicalResource"
+         id="com.ibm.ftt.api.samples.subscribelogical">
+          <menu
+            id="com.ibm.ftt.api.samples.PopupMenu"
+            label="%apiMenu.title">
+            <separator name="group1"/>
+         </menu>
+		 <filter name="physicalResourceAvailable" value="true"/>
+		 <filter name="physicalResourceAvailable" value="true"/>
+         <action
+            label="%apiMenu.samples.subscribeToEvents"
+            class="com.ibm.ftt.api.samples.notification.SubscribeAction"
+            menubarPath="com.ibm.ftt.api.samples.PopupMenu/group1"
+            id="com.ibm.ftt.api.samples.subscribelogicalaction"/>
+      </objectContribution>
+      <!-- Sample for creating a logical resource -->
+      <objectContribution
+         adaptable="false"
+         objectClass="com.ibm.ftt.resources.core.physical.IResourceReference"
+         id="com.ibm.ftt.api.samples.createlogicalresource">
+         <action
+            label="%apiMenu.samples.createLogicalResource"
+            class="com.ibm.ftt.api.samples.resources.CreateLogicalResourceAction"
+            menubarPath="com.ibm.ftt.api.samples.PopupMenu/group1"
+            id="com.ibm.ftt.api.samples.createlogicalresourceaction"/>
+      </objectContribution>
+     <!-- Sample for copying a physical resource -->
+      <objectContribution
+         adaptable="false"
+         objectClass="com.ibm.ftt.resources.core.physical.IResourceReference"
+         id="com.ibm.ftt.api.samples.copyphysicalresource">
+         <action
+            label="%apiMenu.samples.copyPhysicalResource"
+            class="com.ibm.ftt.api.samples.resources.CopyPhysicalResourceAction"
+            menubarPath="com.ibm.ftt.api.samples.PopupMenu/group1"
+            id="com.ibm.ftt.api.samples.copyphysicalresourceaction"/>
+      </objectContribution>
+      <!-- Sample for getting dependencies -->
+      <objectContribution
+         adaptable="false"
+         objectClass="com.ibm.ftt.projects.zos.zoslogical.ILZOSDataSetMember"
+         id="com.ibm.ftt.api.samples.dependencies.logical">
+          <menu
+            id="com.ibm.ftt.api.samples.PopupMenu"
+            label="%apiMenu.title">
+            <separator name="group1"/>
+         </menu>
+         <filter name="remotetype" value="file"/> 
+		 <filter name="contentTypeId" value="com.ibm.ftt.language.cobol.core.CobolLanguage"/>				 		          
+		 <filter name="physicalResourceAvailable" value="true"/>
+         <action
+            label="%apiMenu.samples.showDependencies"
+            class="com.ibm.ftt.api.samples.dependencies.GetDependenciesAction"
+            menubarPath="com.ibm.ftt.api.samples.PopupMenu/group1"
+            enablesFor="1"
+            id="com.ibm.ftt.api.samples.getdependenciesaction.logical"/>
+      </objectContribution>          
+      <objectContribution
+         adaptable="false"
+         objectClass="com.ibm.ftt.resources.core.physical.IResourceReference"
+         id="com.ibm.ftt.api.samples.dependencies.physical">
+          <menu
+            id="com.ibm.ftt.api.samples.PopupMenu"
+            label="%apiMenu.title">
+            <separator name="group1"/>
+         </menu>
+         <filter name="remotetype" value="file"/> 
+		 <filter name="contentTypeId" value="com.ibm.ftt.language.cobol.core.CobolLanguage"/>				 		          
+         <action
+            label="%apiMenu.samples.showDependencies"
+            class="com.ibm.ftt.api.samples.dependencies.GetDependenciesAction"
+            menubarPath="com.ibm.ftt.api.samples.PopupMenu/group1"
+            enablesFor="1"
+            id="com.ibm.ftt.api.samples.getdependenciesaction.physical"/>
+      </objectContribution>          
+      <!-- Sample for FileOperationValidator -->
+      <objectContribution
+         adaptable="false"
+         objectClass="com.ibm.ftt.projects.core.logical.ILogicalFile"
+         id="com.ibm.ftt.api.samples.filevalidatorlogical">
+         <menu
+            id="com.ibm.ftt.api.samples.PopupMenu"
+            label="%apiMenu.title.popup">
+            <separator name="group1"/>
+         </menu>
+		 <filter name="physicalResourceAvailable" value="true"/>
+         <action
+            label="%apiMenu.samples.listFileValidators"
+            class="com.ibm.ftt.api.samples.validation.ListFileValidatorsAction"
+            menubarPath="com.ibm.ftt.api.samples.PopupMenu/group1"
+            id="com.ibm.ftt.api.samples.openfilelogicalaction"/>
+      </objectContribution>
+      <objectContribution
+         adaptable="false"
+         objectClass="com.ibm.ftt.resources.zos.zosphysical.IZOSResourceReference"
+         id="com.ibm.ftt.api.samples.filevalidatorphysical">
+         <action
+            label="%apiMenu.samples.listFileValidators"
+            class="com.ibm.ftt.api.samples.validation.ListFileValidatorsAction"
+            menubarPath="com.ibm.ftt.api.samples.PopupMenu/group1"
+            id="com.ibm.ftt.api.samples.openfilephysicalaction"/>
+      </objectContribution>
+      <!-- Sample for setting resource specific mapping -->
+      <objectContribution
+         adaptable="false"
+         objectClass="com.ibm.ftt.resources.zos.zosphysical.IZOSResourceReference"
+         id="com.ibm.ftt.api.samples.mapping.physical.setExtensionMapping">
+         <menu
+            id="com.ibm.ftt.api.samples.PopupMenu"
+            label="%apiMenu.title.popup">
+            <separator name="group1"/>
+         </menu>
+         <action
+            label="%apiMenu.samples.setExtension"
+            class="com.ibm.ftt.api.samples.mapping.SetExtensionMappingAction"
+            menubarPath="com.ibm.ftt.api.samples.PopupMenu/group1"
+            id="com.ibm.ftt.api.samples.mapping.physical.setExtensionMappingAction"/>
+      </objectContribution>
+      <objectContribution
+         adaptable="false"
+         objectClass="com.ibm.ftt.projects.zos.zoslogical.ILZOSResource"
+         id="com.ibm.ftt.api.samples.mapping.logical.setMappingExtension">
+         <menu
+            id="com.ibm.ftt.api.samples.PopupMenu"
+            label="%apiMenu.title.popup">
+            <separator name="group1"/>
+         </menu>
+         <action
+            label="%apiMenu.samples.setExtension"
+            class="com.ibm.ftt.api.samples.mapping.SetExtensionMappingAction"
+            menubarPath="com.ibm.ftt.api.samples.PopupMenu/group1"
+            id="com.ibm.ftt.api.samples.mapping.logical.setExtensionMappingAction"/>
+      </objectContribution>
+   </extension>
+   
+   <extension
+         id="com.ibm.ftt.api.samples.propertyPages"
+         name="%apiSample.propertyPages"
+         point="org.eclipse.ui.propertyPages">
+      <!-- add a simple property page to cbl resources in RSE view -->   
+	  <page name="%apiProperty.simplePropertyPage"
+	  		nameFilter="*.cbl"
+	        class="com.ibm.ftt.api.samples.propertyPages.SimplePropertyPage"
+	        id="com.ibm.ftt.api.samples.physicalPropertyPage">
+            <enabledWhen>
+                <instanceof
+                    value="com.ibm.ftt.resources.zos.model.MVSFileResource">
+                </instanceof>
+            </enabledWhen>
+	        <filter name="remoteType" value="*file"/>
+	  </page>
+      <!-- add a simple property page to cbl resources in zOS Projets view -->   
+	  <page name="%apiProperty.simplePropertyPage"
+	  		nameFilter="*.cbl"
+	        class="com.ibm.ftt.api.samples.propertyPages.SimplePropertyPage"
+	        id="com.ibm.ftt.api.samples.logicalPropertyPage">
+            <enabledWhen>
+                <instanceof
+                    value="com.ibm.ftt.projects.zos.zoslogical.ILZOSResource">
+                </instanceof>
+            </enabledWhen>
+	        <filter name="remoteType" value="*file"/>
+	  </page>
+	  <page name="%apiProperty.naturePropertyPage"
+	        class="com.ibm.ftt.api.samples.propertyPages.SimplePropertyPage"
+	        id="com.ibm.ftt.api.samples.logicalProjectPropertyPage"
+	        systemtypes="z/OS"
+	        typecategoryfilter="logicalfiles"
+	        typefilter="subproject">
+         <filter
+               value="com.ibm.ftt.api.samples.samplenature"
+               name="projectNature"/>
+	  </page>
+	  <page name="%apiProperty.naturePropertyPage"
+	        class="com.ibm.ftt.api.samples.propertyPages.SimplePropertyPage"
+	        id="com.ibm.ftt.api.samples.logicalPDSPropertyPage"
+	        systemtypes="z/OS"
+	        typecategoryfilter="logicalfiles"
+	        typefilter="folder">
+         <filter
+               value="com.ibm.ftt.api.samples.samplenature"
+               name="projectNature"/>
+	  </page>
+   </extension>
+   <extension
+         point="org.eclipse.ui.views">
+      <category
+            name="z/OS Remote Access API Samples"
+            id="com.ibm.ftt.api.samples"/>
+      <view
+            class="com.ibm.ftt.api.samples.views.EditInfoView"
+            icon="icons/zOSEditInfo.gif"
+            category="com.ibm.ftt.api.samples"
+            name="%editInfoView.viewName"
+            id="com.ibm.ftt.api.samples.views.EditInfoView"/>
+   </extension>
+   <extension
+         id="samplenature"
+         name="%apiSample.projectNature"
+         point="com.ibm.ftt.projects.core.natures">
+      <nature class="com.ibm.ftt.api.samples.natures.SampleNature"/>
+   </extension>
+  <extension
+        id="samplebuilder"
+        name="%apiSample.projectBuilder"
+        point="com.ibm.ftt.projects.core.builders">
+     <builder class="com.ibm.ftt.api.samples.builders.SampleBuilder"          
+           name="sampleBuilder"/>
+  </extension>
+         <!--
+   <extension
+         point="org.eclipse.ui.propertyPages">
+      <page
+            objectClass="com.ibm.ftt.projects.zos.zoslogical.impl.LZOSPartitionedDataSet"
+            class="com.ibm.ftt.api.samples.propertyPages.SimplePropertyPage"
+            name="%apiProperty.naturePropertyPage"
+            id="com.ibm.ftt.api.samples.logicalPDSPropertyPage">
+         <filter
+               value="com.ibm.ftt.api.samples.samplenature"
+               name="projectNature"/>
+      </page>
+   </extension>
+       -->
+       
+  <!-- This is how to register a category and properties with the
+       property group manager. -->     
+  <extension point="com.ibm.ftt.properties.api.category">
+    <category name="SAMPLE_CATEGORY">
+      <property name="PROPERTY_1" />
+      <property name="PROPERTY_2" />
+    </category>
+  </extension>
+  
+  <!-- This is how to register a configuration file with the
+       configuration manager.     
+  <extension point="com.ibm.ftt.configurations.extensionpoints.configurationFile">
+    <action
+      class="com.ibm.ftt.api.samples.configurations.SampleConfigurationFile"
+      configurationFileId="com.ibm.ftt.api.samples.configurations.sampleconfigurationfile"
+      name="Sample Configuration File"
+      fileMask="sampleconfig.xml"
+      scope="local">
+    </action>
+  </extension>
+  --> 
+  
+  <extension
+         id="com.ibm.ftt.api.samples.validator"
+         name="Sample File Validator"
+         point="com.ibm.ftt.resources.core.fileOperationValidator">
+      <validator
+            class="com.ibm.ftt.api.samples.validation.SampleFileOperationValidator"
+            id="com.ibm.ftt.api.samples.fileValidator"
+            name="apiSample.fileValidator"/>
+   </extension>
+  
+
+</plugin>

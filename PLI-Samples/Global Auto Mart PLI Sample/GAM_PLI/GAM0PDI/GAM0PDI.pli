@@ -1,0 +1,190 @@
+*process langlvl(saa2) not('ª^') limits(extname(31));                           
+                                                                                
+ /********************************************************************/         
+ /*                                                                  */         
+ /* MODULE NAME    GAM0PDI.PLI                                       */         
+ /*                                                                  */         
+ /* STATEMENT      IBM WebSphere Developer for System z              */         
+ /*                5724-L44                                          */         
+ /*                (c) Copyright IBM Corp. 2006                      */         
+ /*                                                                  */         
+ /* DISCLAIMER OF WARRANTIES                                         */         
+ /* You may copy, modify, and distribute these samples, or their     */         
+ /* modifications, in any form, internally or as part of your        */         
+ /* application or related documentation. These samples have not     */         
+ /* been tested under all conditions and are provided to you by      */         
+ /* IBM without obligation of support of any kind. IBM PROVIDES      */         
+ /* THESE SAMPLES "AS IS" SUBJECT TO ANY STATUTORY WARRANTIES THAT   */         
+ /* CANNOT BE EXCLUDED. IBM MAKES NO WARRANTIES OR CONDITIONS,       */         
+ /* EITHER EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO, THE     */         
+ /* IMPLIED WARRANTIES OR CONDITIONS OF MERCHANTABILITY, FITNESS     */         
+ /* FOR A PARTICULAR PURPOSE, AND NON-INFRINGEMENT REGARDING THESE   */         
+ /* SAMPLES OR TECHNICAL SUPPORT, IF ANY.                            */         
+ /* You will indemnify IBM or third parties that provide IBM         */         
+ /* products ("Third Parties") from and against any third party      */         
+ /* claim arising out of the use, modification or distribution of    */         
+ /* these samples with your application. You may not use the same    */         
+ /* path name as the original files/modules. You must not alter or   */         
+ /* delete any copyright information in the Samples.                 */         
+ /*                                                                  */         
+ /********************************************************************/         
+                                                                                
+   GAM0PDI: Procedure (COMMAREAPTR) options (main);                             
+                                                                                
+   DECLARE COMMAREAPTR          POINTER;                                        
+                                                                                
+   %INCLUDE DFHAID;                                                             
+   %INCLUDE GAM0MP4;                                                            
+                                                                                
+   DCL 01 LCOMMAREA             BASED(COMMAREAPTR),                             
+          02 LVIN               CHARACTER(4),                                   
+          02 LMAKE              CHARACTER(20),                                  
+          02 LMODEL             CHARACTER(20),                                  
+          02 LPRICE             CHARACTER(11),                                  
+          02 LCOND              CHARACTER(4),                                   
+          02 LCOLOR             CHARACTER(32),                                  
+          02 LYEAR              CHARACTER(4),                                   
+          02 LBODY              CHARACTER(35),                                  
+          02 LTRIM              CHARACTER(32),                                  
+          02 LTRANS             CHARACTER(10),                                  
+          02 LCYLINDER          CHARACTER(5),                                   
+          02 LMILES             CHARACTER(10),                                  
+          02 LDEALER            CHARACTER(35),                                  
+          02 LPHONE             CHARACTER(12),                                  
+          02 LADDRESS           CHARACTER(45),                                  
+          02 LCITY              CHARACTER(25),                                  
+          02 LSTATE             CHARACTER(2),                                   
+          02 LZIP               CHARACTER(5),                                   
+          02 LBUY               CHARACTER(3),                                   
+          02 LMESSAGE           CHARACTER(20),                                  
+          02 LCP                SIGNED FIXED BIN(31),                           
+          02 LLCLBUILD          CHARACTER(1);                                   
+                                                                                
+   DCL 01 WCOMMAREA,                                                            
+          02 WVIN               CHARACTER(4),                                   
+          02 WMAKE              CHARACTER(20),                                  
+          02 WMODEL             CHARACTER(20),                                  
+          02 WPRICE             CHARACTER(11),                                  
+          02 WCOND              CHARACTER(4),                                   
+          02 WCOLOR             CHARACTER(32),                                  
+          02 WYEAR              CHARACTER(4),                                   
+          02 WBODY              CHARACTER(35),                                  
+          02 WTRIM              CHARACTER(32),                                  
+          02 WTRANS             CHARACTER(10),                                  
+          02 WCYLINDER          CHARACTER(5),                                   
+          02 WMILES             CHARACTER(10),                                  
+          02 WDEALER            CHARACTER(35),                                  
+          02 WPHONE             CHARACTER(12),                                  
+          02 WADDRESS           CHARACTER(45),                                  
+          02 WCITY              CHARACTER(25),                                  
+          02 WSTATE             CHARACTER(2),                                   
+          02 WZIP               CHARACTER(5),                                   
+          02 WBUY               CHARACTER(3),                                   
+          02 WMESSAGE           CHARACTER(20),                                  
+          02 WCP                SIGNED FIXED BIN(31),                           
+          02 WLCLBUILD          CHARACTER(1);                                   
+                                                                                
+   IF EIBCALEN ^= SIZE(WCOMMAREA) THEN                                          
+      EXEC CICS RETURN;                                                         
+   ELSE                                                                         
+      WCOMMAREA = LCOMMAREA;                                                    
+                                                                                
+   CALL PLIFILL(ADDR(MAP4I),'00'X,SIZE(MAP4I));                                 
+                                                                                
+   SELECT(EIBAID);                                                              
+                                                                                
+   WHEN(DFHCLEAR)                                                               
+      DO;                                                                       
+         CALL POPULATEMAP;                                                      
+         CALL SENDMAP;                                                          
+      END;                                                                      
+                                                                                
+   WHEN(DFHENTER)                                                               
+      DO;                                                                       
+         CALL GETDATA;                                                          
+         CALL POPULATEMAP;                                                      
+         CALL SENDMAP;                                                          
+      END;                                                                      
+                                                                                
+   WHEN(DFHPF5)                                                                 
+      DO;                                                                       
+         DCL 01 PASSDATA,                                                       
+                02 PMAKE     CHARACTER(20),                                     
+                02 PMODEL    CHARACTER(20),                                     
+                02 PPREV             CHARACTER(1),                              
+                02 PNEXT             CHARACTER(1),                              
+                02 PCURSORPOS        SIGNED FIXED BIN(31),                      
+                02 *                 CHARACTER(800),                            
+                02 PLCLBUILD         CHARACTER(1);                              
+                                                                                
+         CALL PLIFILL(ADDR(PASSDATA),'00'X,SIZE(PASSDATA));                     
+         PPREV  = "Y";                                                          
+         PNEXT  = "N";                                                          
+         PMAKE = WMAKE;                                                         
+         PMODEL = WMODEL;                                                       
+         PCURSORPOS = WCP + 1;                                                  
+         PLCLBUILD = WLCLBUILD;                                                 
+                                                                                
+         EXEC CICS XCTL PROGRAM ('GAM0PII') COMMAREA (PASSDATA);                
+                                                                                
+      END;                                                                      
+                                                                                
+   WHEN(DFHPF3)                                                                 
+      DO;                                                                       
+         EXEC CICS SYNCPOINT;                                                   
+         EXEC CICS SEND                                                         
+                   CONTROL                                                      
+                   ERASE                                                        
+                   FREEKB;                                                      
+                                                                                
+         EXEC CICS RETURN;                                                      
+      END;                                                                      
+                                                                                
+   OTHERWISE                                                                    
+      DO;                                                                       
+         CALL POPULATEMAP;                                                      
+         OUTPUTO = 'Invalid key pressed.';                                      
+      CALL SENDMAP;                                                             
+      END;                                                                      
+   END;                                                                         
+                                                                                
+   EXEC CICS RETURN TRANSID('GPDI') COMMAREA( WCOMMAREA );                      
+                                                                                
+   GETDATA: PROCEDURE;                                                          
+      EXEC CICS LINK PROGRAM('GAM0PGD') COMMAREA( WCOMMAREA );                  
+   END;                                                                         
+                                                                                
+   POPULATEMAP: PROCEDURE;                                                      
+        PRICEO   = WPRICE;                                                      
+        MAKEO    = WMAKE;                                                       
+        MODELO   = WMODEL;                                                      
+        CONDO    = WCOND;                                                       
+        COLORO   = WCOLOR;                                                      
+        AYEARO   = WYEAR;                                                       
+        BODYO    = WBODY;                                                       
+        TRIMO    = WTRIM;                                                       
+        TRANSO   = WTRANS;                                                      
+        CYLNDRO  = WCYLINDER;                                                   
+        MILESO   = WMILES;                                                      
+        VINO     = WVIN;                                                        
+        DEALERO  = WDEALER;                                                     
+        PHONEO   = WPHONE;                                                      
+        ADDRESSO = WADDRESS;                                                    
+        CITYO    = WCITY;                                                       
+        STATEO   = WSTATE;                                                      
+        ZIPO     = WZIP;                                                        
+        BUYO     = "___";                                                       
+        OUTPUTO  = WMESSAGE;                                                    
+   END;                                                                         
+                                                                                
+   SENDMAP: PROCEDURE;                                                          
+                                                                                
+       EXEC CICS SEND MAP('MAP4')                                               
+                 MAPSET('GAM0MP4')                                              
+                 FROM( MAP4O )                                                  
+                 ERASE;                                                         
+                                                                                
+   END;                                                                         
+                                                                                
+   END;                                                                         
+                                                                               

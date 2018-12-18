@@ -1,0 +1,201 @@
+*process langlvl(saa2) not('ª^') limits(extname(31));                           
+                                                                                
+ /********************************************************************/         
+ /*                                                                  */         
+ /* MODULE NAME    GAM0PGD.PLI                                       */         
+ /*                                                                  */         
+ /* STATEMENT      IBM WebSphere Developer for System z              */         
+ /*                5724-L44                                          */         
+ /*                (c) Copyright IBM Corp. 2006                      */         
+ /*                                                                  */         
+ /* DISCLAIMER OF WARRANTIES                                         */         
+ /* You may copy, modify, and distribute these samples, or their     */         
+ /* modifications, in any form, internally or as part of your        */         
+ /* application or related documentation. These samples have not     */         
+ /* been tested under all conditions and are provided to you by      */         
+ /* IBM without obligation of support of any kind. IBM PROVIDES      */         
+ /* THESE SAMPLES "AS IS" SUBJECT TO ANY STATUTORY WARRANTIES THAT   */         
+ /* CANNOT BE EXCLUDED. IBM MAKES NO WARRANTIES OR CONDITIONS,       */         
+ /* EITHER EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO, THE     */         
+ /* IMPLIED WARRANTIES OR CONDITIONS OF MERCHANTABILITY, FITNESS     */         
+ /* FOR A PARTICULAR PURPOSE, AND NON-INFRINGEMENT REGARDING THESE   */         
+ /* SAMPLES OR TECHNICAL SUPPORT, IF ANY.                            */         
+ /* You will indemnify IBM or third parties that provide IBM         */         
+ /* products ("Third Parties") from and against any third party      */         
+ /* claim arising out of the use, modification or distribution of    */         
+ /* these samples with your application. You may not use the same    */         
+ /* path name as the original files/modules. You must not alter or   */         
+ /* delete any copyright information in the Samples.                 */         
+ /*                                                                  */         
+ /********************************************************************/         
+                                                                                
+   GAM0PGD: Procedure (COMMAREAPTR) options (main);                             
+                                                                                
+   %INCLUDE GAM0ICT;                                                            
+   %INCLUDE GAM0IDT;                                                            
+                                                                                
+   DECLARE COMMAREAPTR          POINTER,                                        
+           TEMPCOND             CHARACTER(4),                                   
+           TEMPPRICE            PICTURE '$9999999V.99',                         
+           TEMPYEAR             PICTURE '9999',                                 
+           TEMPZIP              PICTURE '99999';                                
+                                                                                
+   DCL 01 LCOMMAREA             BASED(COMMAREAPTR),                             
+          02 LVIN               CHARACTER(4),                                   
+          02 LMAKE              CHARACTER(20),                                  
+          02 LMODEL             CHARACTER(20),                                  
+          02 LPRICE             CHARACTER(11),                                  
+          02 LCOND              CHARACTER(4),                                   
+          02 LCOLOR             CHARACTER(32),                                  
+          02 LYEAR              CHARACTER(4),                                   
+          02 LBODY              CHARACTER(35),                                  
+          02 LTRIM              CHARACTER(32),                                  
+          02 LTRANS             CHARACTER(10),                                  
+          02 LCYLINDER          CHARACTER(5),                                   
+          02 LMILES             CHARACTER(10),                                  
+          02 LDEALER            CHARACTER(35),                                  
+          02 LPHONE             CHARACTER(12),                                  
+          02 LADDRESS           CHARACTER(45),                                  
+          02 LCITY              CHARACTER(25),                                  
+          02 LSTATE             CHARACTER(2),                                   
+          02 LZIP               CHARACTER(5),                                   
+          02 LBUY               CHARACTER(3),                                   
+          02 LMESSAGE           CHARACTER(20),                                  
+          02 LCP                PICTURE '9999',                                 
+          02 LLCLBUILD          CHARACTER(1);                                   
+                                                                                
+   DCL 01 WCOMMAREA,                                                            
+          02 WVIN               CHARACTER(4),                                   
+          02 WMAKE              CHARACTER(20),                                  
+          02 WMODEL             CHARACTER(20),                                  
+          02 WPRICE             CHARACTER(11),                                  
+          02 WCOND              CHARACTER(4),                                   
+          02 WCOLOR             CHARACTER(32),                                  
+          02 WYEAR              CHARACTER(4),                                   
+          02 WBODY              CHARACTER(35),                                  
+          02 WTRIM              CHARACTER(32),                                  
+          02 WTRANS             CHARACTER(10),                                  
+          02 WCYLINDER          CHARACTER(5),                                   
+          02 WMILES             CHARACTER(10),                                  
+          02 WDEALER            CHARACTER(35),                                  
+          02 WPHONE             CHARACTER(12),                                  
+          02 WADDRESS           CHARACTER(45),                                  
+          02 WCITY              CHARACTER(25),                                  
+          02 WSTATE             CHARACTER(2),                                   
+          02 WZIP               CHARACTER(5),                                   
+          02 WBUY               CHARACTER(3),                                   
+          02 WMESSAGE           CHARACTER(20),                                  
+          02 WCP                PICTURE '9999',                                 
+          02 WLCLBUILD          CHARACTER(1);                                   
+                                                                                
+   EXEC SQL INCLUDE SQLCA;                                                      
+                                                                                
+   IF EIBCALEN ^= SIZE(WCOMMAREA) THEN                                          
+      EXEC CICS RETURN;                                                         
+   ELSE                                                                         
+      WCOMMAREA = LCOMMAREA;                                                    
+                                                                                
+   IF WLCLBUILD = "Y" THEN                                                      
+      EXEC SQL CONNECT TO SAMPLE;                                               
+                                                                                
+   EXEC SQL SELECT CENTINVNTRY.VIN,                                             
+                   CENTINVNTRY.AUTOYEAR,                                        
+                   CENTINVNTRY.MAKE,                                            
+                   CENTINVNTRY.MODEL,                                           
+                   CENTINVNTRY.COLOR,                                           
+                   CENTINVNTRY.BODY,                                            
+                   CENTINVNTRY.AUTOTRIM,                                        
+                   CENTINVNTRY.TRANS,                                           
+                   CENTINVNTRY.CYLIND,                                          
+                   CENTINVNTRY.MILES,                                           
+                   CENTINVNTRY.NEWAUTO,                                         
+                   CENTINVNTRY.PRICE,                                           
+                   DEALERSHIP.DEALERADDRESS,                                    
+                   DEALERSHIP.ABBR,                                             
+                   DEALERSHIP.CITY,                                             
+                   DEALERSHIP.ZIP,                                              
+                   DEALERSHIP.PHONE,                                            
+                   DEALERSHIP.DEALERNAME                                        
+              INTO :VIN,                                                        
+                   :AUTOYEAR,                                                   
+                   :MAKE,                                                       
+                   :MODEL,                                                      
+                   :COLOR,                                                      
+                   :BODY,                                                       
+                   :AUTOTRIM,                                                   
+                   :TRANS,                                                      
+                   :CYLIND,                                                     
+                   :MILES,                                                      
+                   :NEWAUTO,                                                    
+                   :PRICE,                                                      
+                   :DEALERADDRESS,                                              
+                   :ABBR,                                                       
+                   :CITY,                                                       
+                   :ZIP,                                                        
+                   :PHONE,                                                      
+                   :DEALERNAME                                                  
+              FROM CENTINVNTRY,DEALERSHIP                                       
+             WHERE CENTINVNTRY.DEALERID=DEALERSHIP.DEALERID                     
+               AND CENTINVNTRY.VIN=:WVIN;                                       
+                                                                                
+   IF SQLCODE ^= 0 THEN                                                         
+   DO;                                                                          
+      WMESSAGE = "SQL ERROR ";                                                  
+      LCOMMAREA = WCOMMAREA;                                                    
+      EXEC CICS RETURN;                                                         
+   END;                                                                         
+                                                                                
+   WVIN        = VIN;                                                           
+   WMAKE       = MAKE;                                                          
+   WMODEL      = MODEL;                                                         
+   WCOLOR      = COLOR;                                                         
+   WBODY       = BODY;                                                          
+   WTRIM       = AUTOTRIM;                                                      
+   WTRANS      = TRANS;                                                         
+   WCYLINDER   = CYLIND;                                                        
+   WMILES      = MILES;                                                         
+   WADDRESS    = DEALERADDRESS;                                                 
+   WSTATE      = ABBR;                                                          
+   WCITY       = CITY;                                                          
+   WDEALER     = DEALERNAME;                                                    
+   WPHONE      = PHONE;                                                         
+   TEMPYEAR    = AUTOYEAR;                                                      
+   WYEAR       = TEMPYEAR;                                                      
+                                                                                
+   TEMPZIP     = ZIP;                                                           
+   WZIP        = TEMPZIP;                                                       
+   TEMPCOND    = NEWAUTO;                                                       
+   TEMPPRICE   = PRICE;                                                         
+                                                                                
+   IF TEMPCOND = "Y" THEN                                                       
+      WCOND = "NEW";                                                            
+   ELSE                                                                         
+      WCOND = "USED";                                                           
+                                                                                
+   DCL X             DEC(2,0);                                                  
+   DCL STOPPARSE     CHARACTER(1);                                              
+                                                                                
+   X = 1;                                                                       
+   STOPPARSE = "N";                                                             
+                                                                                
+   WPRICE = TEMPPRICE;                                                          
+                                                                                
+   DO FOREVER;                                                                  
+      IF STOPPARSE = "Y" THEN                                                   
+         GOTO ENDTRIM;                                                          
+      IF SUBSTR(WPRICE,X,1) ^= "$" &                                            
+         SUBSTR(WPRICE,X,1) ^= "0" THEN                                         
+            STOPPARSE = "Y";                                                    
+      ELSE                                                                      
+         IF SUBSTR(WPRICE,X,1) ^= "$" THEN                                      
+            SUBSTR(WPRICE,X,1) = " ";                                           
+         X = X + 1;                                                             
+      END;                                                                      
+                                                                                
+   ENDTRIM:                                                                     
+                                                                                
+   LCOMMAREA = WCOMMAREA;                                                       
+                                                                                
+   EXEC CICS RETURN;                                                            
+                                                                                
+   END;                                                                        

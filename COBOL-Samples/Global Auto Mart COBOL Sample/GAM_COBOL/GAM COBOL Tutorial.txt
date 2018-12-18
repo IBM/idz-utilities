@@ -1,0 +1,401 @@
+      ******************************************************************
+      *                                                        	       *
+      * MODULE NAME    GAM COBOL Tutorial.txt                          *
+      *                                                                *
+      * STATEMENT          IBM WebSphere Developer for System z        *
+      *                	   5724-L44                                    *
+      *                	   (c) Copyright IBM Corp. 2006                *
+      *                                 			       *
+      * DISCLAIMER OF WARRANTIES				       *
+      * You may copy, modify, and distribute these samples, or their   *
+      * modifications, in any form, internally or as part of your      *
+      * application or related documentation. These samples have not   *
+      * been tested under all conditions and are provided to you by    *
+      * IBM without obligation of support of any kind. IBM PROVIDES    *
+      * THESE SAMPLES "AS IS" SUBJECT TO ANY STATUTORY WARRANTIES THAT *
+      * CANNOT BE EXCLUDED. IBM MAKES NO WARRANTIES OR CONDITIONS,     *
+      * EITHER EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO, THE   *
+      * IMPLIED WARRANTIES OR CONDITIONS OF MERCHANTABILITY, FITNESS   *
+      * FOR A PARTICULAR PURPOSE, AND NON-INFRINGEMENT REGARDING THESE *
+      * SAMPLES OR TECHNICAL SUPPORT, IF ANY. 			       *
+      * You will indemnify IBM or third parties that provide IBM       *
+      * products ("Third Parties") from and against any third party    *
+      * claim arising out of the use, modification or distribution of  *
+      * these samples with your application. You may not use the same  *
+      * path name as the original files/modules. You must not alter or *
+      * delete any copyright information in the Samples.               *
+      *                                                                *
+      ******************************************************************
+
+I.    Introduction
+
+	This tutorial will guide the user through the various steps for
+building and debugging the Global Auto Mart (GAM) sample.  If there is a
+system administrator that administrates the CICS and DB2 resources they will
+need to set up the GAM databases and define the CICS resources in order to
+complete this tutorial.
+
+II.   Defining the Database tables
+        A.  There is a COBOL file GAM0VDB that is provided for inserting
+            data into the GAM Sample Database Tables.
+        B.  It should be compiled with the following provided copybooks:
+            GAM0BCD, GAM0BDD, GAM0BED, GAM0BMD, GAM0BPD, GAM0BUD.
+        C.  Once compiled GAM0VDB can be run with the sample JCL GAM0VCDB
+        D.  This JCL drops the required tables if they already exist,
+            creates the tables, and then runs GAM0VDB to populate the
+            tables.
+        E.  In the JCL provide the database schema name by changing all
+            instances of &SCHEMA to match the desired schema name.
+
+III.  Initial Setup
+
+	A.  First Create a z/OS connection to the host system.
+	B.  Copy all of the COBOL, BMS, and Copybook files from the GAM COBOL
+            Sample into a corresponding PDS.
+	C.  Create three z/OS Projects, one for assembling the BMS Maps
+            (Project A), one for assembling and linking the BMS Maps
+            (Project B), and one for compiling the cobol source files (Project
+            C), by going to the File Menu Bar and selecting
+            File->New->Project.  When the wizard comes up type the filter
+            text z/OS and select the z/OS project option or scroll through
+            the list to the z/OS folder expanding it and selecting the z/OS
+            project, and fill in the required information for the wizard.
+	D.  Under the z/OS project for assembling the BMS Maps (Project A)
+            create three subprojects GAM0MC1, GAM0MC2, and GAM0MC3.  To create
+            a subproject right click on the z/OS project and select
+            New -> MVS Subproject.  Then fill in the required information that
+            is asked for by the wizard. **
+	E.  Under the z/OS project for assembling and linking the BMS Maps
+            (Project B) create three subprojects GAM0MC1, GAM0MC2, and
+            GAM0MC3. **
+	F.  Under the z/OS project for compiling the COBOL file (Project C)
+            create four subprojects one for each of the following COBOL files:
+            GAM0VMI, GAM0VMM, GAM0VII, & GAM0VSI. **
+	G.  If not already done, copy the BMS maps to an assembler PDS.
+	H.  From the assembler PDS add GAM0MC1.asm, GAM0MC2.asm, and
+            GAM0MC3.asm to the Assemble subproject.  To add a file to the
+            subproject right click on the file select Add to Subproject.  In
+            the dialog that pops up select the project and subproject the file
+            is being added to.
+	I.  Add GAM0MC1.asm to the GAM0MC1 subproject for assembling and
+            linking, GAM0MC2.asm to the GAM0MC2 subproject for assembling and
+            linking, and GAM0MC3.asm to the GAM0MC3 subproject for assembling
+            and linking.
+        J.  Add GAM0VMI.cbl to the GAM0VMI subproject, GAM0VMM.cbl to the
+            GAM0VMM subproject, GAM0VII.cbl to the GAM0VII subproject and
+            GAM0VSI.cbl to the GAM0VSI subproject.
+
+** When naming the subprojects, this tutorial named each subproject after the
+   name of the file that it will contain.  Therefore this tutorial will
+   refer to the subproject by the name of the file that it contains.
+   (i.e. the GAM0VMI subproject contains the GAM0VMI.cbl file)
+
+IV.   Assembling the BMS Maps
+	
+	A.  Defining the Assemble Properties
+                On Each Assemble Subproject: ***
+		1.  Right click on the Assemble Subproject and select
+                    Properties
+		2.  In the Properties Dialog click on the Assembler Settings
+		3.  Expand the ELAXFASM (or equivalent) Procedure
+		4.  Double click on the ASM Step or highlight the ASM Step and
+                    click Edit Step...
+		5.  Set the Assembler options to:  SYSPARM(DSECT),NOOBJECT,DECK
+		6.  Set the Listing Output Data Set to: the corresponding
+                    listing data set
+                7.  Set the Object Deck Data Set to: the corresponding object
+                    data set
+		8.  If different from the default Macro Libraries location
+                    provide the correct location of your system's macro
+                    libraries PDSs.
+		9.  Also include in the macro libraries the PDS with the CICS
+                    Macros needed for BMS Maps.
+		10. Set the Additional JCL to:
+                    //SYSPUNCH DD DISP=SHR,DSN="COPY LIBRARY PDS"("COPYBOOK
+                    THAT NEEDS TO BE GENERATED")  i.e.
+                    //SYSPUNCH DD DISP=SHR,DSN=TEST.COPYLIB(GAM0MC1)
+
+                    For each subproject the copybook name that is generated
+                    needs to match the name of the map file.
+
+                11. Click OK, then Click Apply, then Click OK
+                12. Once the properties have been set right click on the
+                    assembler file in the subproject and select:
+                    Generate JCL -> For Assemble
+                13. Once the JCL is created right click on the JCL and select:
+                    Submit
+                14. Once the job has been submitted expand the JES Job Monitor
+                    in the Remote Systems View, expand My Jobs and find the JOB
+                    output or right click on My Jobs and select show in table
+                    and find the JOB output, to see if the job completed
+                    successfully.
+
+        *** To Expediate Setup if the subproject is going to contain properties
+            identical to other subprojects, the properties can be exported to
+            an xml file and can be imported into other subprojects.
+
+            To Export subproject properties:
+                1.  Right click on the subproject from which the properties are
+                    to be exported.
+                2.  Select Export Properties...
+                3.  Choose a destination and a name for the .xml file in the
+                    Save As Dialogue and click ok
+
+            To Import subproject properties:
+                1.  Right click on the subproject that the properties are to
+                    be imported into.
+                2.  Browse for and select the .xml file to use and click ok
+
+
+V.    Assembling and Linking the BMS Maps
+
+	A.  Defining the Assemble and Link Properties
+		On Each Assemble and Link Subproject:
+		1.  Right click on the Assemble and Link Subproject and select
+                    Properties
+		2.  In the Properties Dialog click on the Assembler Settings
+		3.  Expand the ELAXFASM (or equivalent) Procedure
+		4.  Double click on the ASM Step or highlight the ASM Step and
+                    click Edit Step...
+		5.  Set the Assembler options to:  SYSPARM(MAP)
+		6.  Set the Listing Output Data Set to: the corresponding
+                    listing data set
+                7.  Set the Object Deck Data Set to: the corresponding object
+                    data set
+		8.  If different from the default Macro Libraries location
+                    provide the correct location of your system's macro
+                    libraries PDSs.
+                9.  Click OK
+                10. Click on Link Options in the Properties Dialog
+		11. Expand the ELAXFLNK (or equivalent) Procedure
+		12. Double click on the LINK Step or highlight the Link Step
+                    and click Edit Step...
+		13. Set the Load Module Location to: the Load Library that CICS
+                    uses.
+		14. Click OK, then Click Apply, then Click OK
+		15. Right Click on the Assembling and Linking z/OS Project and
+                    select Rebuild.
+		16. Either from the Remote Systems View or the Remote System
+                    Details make sure that the jobs submitted were completed
+                    successfully.
+
+VI.   Compiling the COBOL Files
+        A.  Define the properties for the GAM0VII & GAM0VMI Subprojects
+                1.  Right click on the subproject and select Properties
+                2.  In the Properties Dialog click on COBOL Settings
+                3.  On the Procedures & Steps Panel enable CICS by checking:
+                    "Use CICS" Option.
+                4.  Expand the ELAXFCOC (or equivalent) Procedure
+                5.  Double click on the COBOL step or highlight the COBOL step
+                    and click Edit Step...
+                6.  Set the Listing Output Data Set, Debug Data Set, & Object
+                    Deck Data Set to a corresponding PDS where the different
+                    artifacts, that are created from the compiler, should be
+                    written
+                7.  Set the Copy Libraries to: the PDS that the supplied
+                    COPYBOOKS were copied to and to the CICS Copy Library where
+                    the COBOL DFHAID can be found
+                8.  If XML Feedback is desired ensure that the Support Error
+                    Feedback check box is checked and that Data Set Qualifier
+                    for Compiler Errors: is set to the desired location that
+                    the XML file should be generated
+                9.  Click OK, then click on the Link Options
+                10. Expand the ELAXFLNK (or equivalent) Procedure
+                11. Double click on the LINK step or highlight the LINK step
+                    and click Edit Step...
+                12. Set the Load Module Location to: the Load Library that CICS
+                    uses.
+                13. Add any link libraries that are needed for the project to
+                    the Link Libraries field.  (i.e. any link libraries needed
+                    for debugging)
+                14. Click OK, then click on the JCL Job Card and Data Set
+                    Option
+                15. Ensure that the JCL Job Card is correctly configured for
+                    compiling on the host system and that the JCL Data Set is
+                    set to the PDS where the JCL should be created
+                16. Click OK, then click Apply, then click OK
+
+        B.  Define the properties for the GAM0VMM & GAM0VSI Subproject
+                1.  Right click on the subproject and select Properties
+                2.  In the Properties Dialog click on COBOL Settings
+                3.  On the Procedures & Steps Panel enable DB2 and CICS by
+                    checking: "Use DB2" Option and "Use CICS" Option
+                4.  Expand the ELAXFCOC (or equivalent) Procedure
+                5.  Double click on the COBOL step or highlight the COBOL step
+                    and click Edit Step...
+                6.  Set the Listing Output Data Set, Debug Data Set, & Object
+                    Deck Data Set to a corresponding PDS where the different
+                    artifacts, that are created from the compiler, should be
+                    written
+                7.  Set the Copy Libraries to: the PDS that the supplied
+                    COPYBOOKS were copied to and to the CICS Copy Library where
+                    the COBOL DFHAID can be found.  Also if the SQLCA copylib
+                    is not a file that the procedures point to ensure that
+                    this PDS is provided here as well.
+                8.  If XML Feedback is desired ensure that the Support Error
+                    Feedback check box is checked and that Data Set Qualifier
+                    for Compiler Errors: is set to the desired location that
+                    the XML file should be generated
+                9.  Set the Database Request Module Location to: a desired DBRM
+                    PDS
+                10. Work with the Database Administrator to determine which is
+                    the best method for binding the module to a database
+                    package and access plan, either by in-line JCL or through a
+                    bind file.
+
+                    If using the in-line JCL method, the SYSTSIN should look
+                    similar to:
+                    ***Note if the Bind Procedure needs a Steplib data set it
+                       can be added to the top of the SYSTSIN instructions as
+                       demonstrated in the sample JCL
+
+------------------------------------------------------------------------------------
+
+                //STEPLIB DD DISP=SHR,DSN=DB2.V8R1M0.SDSNLOAD
+                //*UNCOMMENT AND TAILOR THE FOLLOWING IF YOUR SYSTSIN STATEMENT**
+                //*CONTAINS BIND INSTRUCTIONS:
+                //SYSTSIN   DD  *
+                  DSN SYSTEM(DSN7)
+                  BIND PACKAGE(GAMPKG) -
+                       MEMBER(GAM0VMM) -
+                       QUALIFIER(GAMUSER) -
+                       LIBRARY('CUST.GAM.DBRM') -
+                       ACTION(REP) -
+                       ISOLATION(CS)   -
+                       VALIDATE(RUN)  -
+                       DYNAMICRULES(BIND)  -
+                       ENCODING(EBCDIC) -
+                       ENABLE(*)
+                  BIND PLAN(GAMPLAN) -
+                       PKLIST(GAMPKG.*) -
+                       ACT(REP) -
+                       RETAIN -
+                       VALIDATE(RUN) -
+                       ISOLATION(CS) -
+                       ENCODING(EBCDIC) -
+                       ENABLE(*)
+                       END
+                //*    OR
+                //*UNCOMMENT AND TAILOR THE FOLLOWING IF YOUR SYSTSIN STATEMENT**
+                //*POINTS TO A DATA SET CONTAINING BIND INSTRUCTIONS
+                //*//SYSTSIN DD DSN=USERID.BIND(MEMBER),DISP=SHR
+                /*
+                //
+
+------------------------------------------------------------------------------------
+
+                    If using a bind file create the bind file in a bind PDS and the
+                    SYSTSIN Instructions in the COBOL Properties should look like:
+
+------------------------------------------------------------------------------------
+
+                //*UNCOMMENT AND TAILOR THE FOLLOWING IF YOUR SYSTSIN STATEMENT**
+                //*CONTAINS BIND INSTRUCTIONS:
+                //*//SYSTSIN   DD  *
+                //* DSN SYSTEM(YOURSYSTEM)
+                //* BIND PLAN(YOURPLAN)
+                //* END
+                //*    OR
+                //*UNCOMMENT AND TAILOR THE FOLLOWING IF YOUR SYSTSIN STATEMENT**
+                //*POINTS TO A DATA SET CONTAINING BIND INSTRUCTIONS
+                //SYSTSIN DD DSN=CUST.GAM.BIND(GAM0VMM),DISP=SHR
+
+------------------------------------------------------------------------------------
+
+                    And the bind file should contain bind instructions that
+                    look like:
+
+------------------------------------------------------------------------------------
+
+                 TSOLIB ACTIVATE DA('DB2.V7R1M0.SDSNLOAD')
+                 ALLOC FI(DBRMLIB) SHR DA('CUST.GAM.DBRM')
+                 DSN SYSTEM(DSN7)
+                   BIND PACKAGE(GAMPKG) -
+                       OWNER(GAMUSER) -
+                       QUALIFIER(GAMUSER) -
+                       MEMBER(GAM0VMM) -
+                       LIBRARY('CUST.GAM.DBRM') -
+                       ACTION(REP) -
+                       ISOLATION(CS)   -
+                       VALIDATE(RUN)  -
+                       DYNAMICRULES(BIND)  -
+                       ENCODING(EBCDIC) -
+                       ENABLE(*)
+
+------------------------------------------------------------------------------------
+
+                11. Click OK, then click on the Link Options
+                12. Expand the ELAXFLNK (or equivalent) Procedure
+                13. Double click on the LINK step or highlight the LINK step
+                    and click Edit Step...
+                14. Set the Load Module Location to: the Load Library that CICS
+                    uses.
+                15. Add any link libraries that are needed for the project to
+                    the Link Libraries field.  (i.e. any link libraries needed
+                    for debugging)
+                16. Click OK, then click on the JCL Job Card and Data Set
+                    Option
+                17. Ensure that the JCL Job Card is correctly configured for
+                    compiling on the host system and that the JCL Data Set is
+                    set to the PDS where the JCL should be created
+                18. Click OK, then click Apply, then click OK
+
+        C.  COMPILING THE PROJECT
+                1.  Right click on the z/OS Project and select Rebuild
+                2.  Either from the Remote Systems View or the Remote System
+                    Details make sure that the jobs submitted from the
+                    rebuilding of the project were completed successfully
+
+VII.  Defining the CICS Resource Definitions
+
+        A.  The CICS Resource Definitions should map to the following Program
+            Definitions (PD), Transaction Definitions (TD), DB2Entry
+            Definitions (DB2ED), and DB2Trans Definitions (DB2TD).
+            There is a sample JCL GAMCSDUP that will define
+            these resources automatically.
+                1.  GAM0VMM maps to GAM0VMM PD
+                2.  GAM0VMI maps to GAM0VMI PD
+                3.  GAM0VII maps to GAM0VII PD
+                4.  GAM0VSI maps to GAM0VSI PD
+                5.  GAM0VMM PD maps to GBMM TD
+                6.  GAM0VMI PD maps to GBMI TD
+                7.  GAM0VII PD maps to GBII TD
+                8.  GAM0VSI PD maps to GBSI TD
+                9.  GBSI TD maps to GBSI DB2TD
+                10. GBII TD maps to GBII DB2TD
+                11. GBMI TD maps to GBMI DB2TD
+                12. GBMM TD maps to GBMM DB2TD
+                13. GBSI DB2TD maps to GBMI DB2ED
+                14. GBII DB2TD maps to GBMI DB2ED
+                15. GBMI DB2TD maps to GBMI DB2ED
+                16. GBMM DB2TD maps to GBMI DB2ED
+
+VIII. Running and Debugging the GAM Application using DTCN
+
+        A.  To run the application type the transaction GBMI within
+            CICS and the GAM Sample should launch.
+
+        B.  To debug the application using DTCN:
+            1.  In the workbench go to the Debug Perspective by going
+                to Window in the File Menu bar and selecting
+                Open Perspective -> Debug
+            2.  In the Debug View ensure that the Debug UI Daemon is
+                listening on port: 8001 by clicking the listening icon
+                (The listening icon is next to the menu button which
+                 is next to the minimize and maximize buttons on the
+                 right side of the Debug View)
+            3.  In CICS type the transaction id DTCN
+            4.  In the Program Id(s) fields type in GAM0VMI, GAM0VMM,
+                GAM0VII, and GAM0VSI
+            5.  Change Session Type to TCP
+            6.  Set Port Number to 8001
+            7.  Set Display ID to the ip address of the workstation that
+                the WD/z workbench is running on.  The ip address can be
+                obtained from the menu pop up on the listening icon.
+            8.  Press PF4 to save the configurations and PF3 to exit.
+            9.  Run the GBMI transaction and the program should be
+                loaded into the WD/z debugger.
+
+
+	
+	  		

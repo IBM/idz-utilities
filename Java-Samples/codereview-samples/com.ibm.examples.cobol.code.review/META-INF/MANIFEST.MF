@@ -1,0 +1,14 @@
+Manifest-Version: 1.0
+Bundle-ManifestVersion: 2
+Bundle-Name: COBOL Code Review Examples
+Bundle-SymbolicName: com.ibm.examples.cobol.code.review;singleton:=true
+Bundle-Version: 1.0.0.qualifier
+Bundle-Activator: com.ibm.examples.cobol.code.review.Activator
+Bundle-Vendor: IBM
+Require-Bundle: org.eclipse.ui,
+ org.eclipse.core.runtime,
+ com.ibm.etools.cobol.application.model,
+ com.ibm.rsaz.analysis.core,
+ com.ibm.rsar.analysis.codereview.cobol
+Bundle-RequiredExecutionEnvironment: JavaSE-1.6
+Bundle-ActivationPolicy: lazy

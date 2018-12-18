@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?eclipse version="3.4"?>
+<plugin>
+
+   <extension
+         point="com.ibm.rsaz.analysis.core.analysisCategory">
+      <analysisCategory
+            label="Custom COBOL Examples"
+            class="com.ibm.rsaz.analysis.core.category.DefaultAnalysisCategory"
+            provider="codereview.cobol.analysisProvider"
+            id="com.ibm.examples.cobol.code.review.custom">
+       </analysisCategory>  
+   </extension>
+   <extension
+         point="com.ibm.rsaz.analysis.core.analysisRule">
+      <analysisRule
+            category="com.ibm.examples.cobol.code.review.custom"
+            class="com.ibm.examples.cobol.rules.AvoidEntryStmtsRule"
+            id="com.ibm.examples.cobol.rules.AvoidEntryStmtsRule"
+            label="Avoid ENTRY statements"
+            severity="1">
+      </analysisRule>
+      <analysisRule
+            category="com.ibm.examples.cobol.code.review.custom"
+            class="com.ibm.examples.cobol.rules.CallParagraphBeforeParagraphIsDefinedRule"
+            id="com.ibm.examples.cobol.rules.CallParagraphBeforeParagraphIsDefinedRule"
+            label="Avoid performing Paragraphs defined before the Perform statement"
+            severity="1">
+      </analysisRule>
+      <analysisRule
+            category="com.ibm.examples.cobol.code.review.custom"
+            class="com.ibm.examples.cobol.rules.CICSFlengthRule"
+            id="com.ibm.examples.cobol.rules.CICSFlengthRule"
+            label="Use valid PIC clause for FLENGTH"
+            severity="1">
+      </analysisRule>
+      <analysisRule
+            category="com.ibm.examples.cobol.code.review.custom"
+            class="com.ibm.examples.cobol.rules.ConditionalNamesShareDataItemNameRule"
+            id="com.ibm.examples.cobol.rules.ConditionalNamesShareDataItemNameRule"
+            label="Use data item name in conditionals"
+            severity="1">
+      </analysisRule>
+      <analysisRule
+            category="com.ibm.examples.cobol.code.review.custom"
+            class="com.ibm.examples.cobol.rules.DisplayForDataItemsInComputationsRule"
+            id="com.ibm.examples.cobol.rules.DisplayForDataItemsInComputationsRule"
+            label="Avoid USAGE DISPLAY numeric data items for computations"
+            severity="1">
+      </analysisRule>
+      <analysisRule
+            category="com.ibm.examples.cobol.code.review.custom"
+            class="com.ibm.examples.cobol.rules.OnePeriodPerParagraphRule"
+            id="com.ibm.examples.cobol.rules.OnePeriodPerParagraphRule"
+            label="Avoid using periods except at the end of a PARAGRAPH"
+            severity="1">
+      </analysisRule>   
+      <analysisRule
+            category="com.ibm.examples.cobol.code.review.custom"
+            class="com.ibm.examples.cobol.rules.ParagraphsWithoutExitRule"
+            id="com.ibm.examples.cobol.rules.ParagraphsWithoutExitRule"
+            label="Flag all PARAGRAPHS that do not contain an EXIT statement"
+            severity="1">
+      </analysisRule>
+      <analysisRule
+            category="com.ibm.examples.cobol.code.review.custom"
+            class="com.ibm.examples.cobol.rules.SimpleRecursionRule"
+            id="com.ibm.examples.cobol.rules.SimpleRecursionRule"
+            label="Flag all simple recursive calls"
+            severity="1">
+      </analysisRule>
+      <analysisRule
+            category="com.ibm.examples.cobol.code.review.custom"
+            class="com.ibm.examples.cobol.rules.TruncBinWithBinaryCompItemsRule"
+            id="com.ibm.examples.cobol.rules.TruncBinWithBinaryCompItemsRule"
+            label="Avoid using compiler option TRUNC(BIN) when using binary and computational data types"
+            severity="1">
+      </analysisRule>   
+      <analysisRule
+            category="com.ibm.examples.cobol.code.review.custom"
+            class="com.ibm.examples.cobol.rules.UseOnExceptionWithCallInvokeXmlGenXmlParseRule"
+            id="com.ibm.examples.cobol.rules.UseOnExceptionWithCallInvokeXmlGenXmlParseRule"
+            label="Use ON EXCEPTION with CALL, INVOKE, XML GENERATE and XML PARSE statements"
+            severity="1">
+      </analysisRule>
+      <analysisRule
+            category="com.ibm.examples.cobol.code.review.custom"
+            class="com.ibm.examples.cobol.rules.UseOnOverflowWithStringAndUnstringRule"
+            id="com.ibm.examples.cobol.rules.UseOnOverflowWithStringAndUnstringRule"
+            label="Use ON OVERFLOW with STRING and UNSTRING statements"
+            severity="1">
+      </analysisRule>
+      <analysisRule
+            category="com.ibm.examples.cobol.code.review.custom"
+            class="com.ibm.examples.cobol.rules.UseOnSizeErrorWithArithmeticVerbsRule"
+            id="com.ibm.examples.cobol.rules.UseOnSizeErrorWithArithmeticVerbsRule"
+            label="Use ON SIZE ERROR with arithmetic statements"
+            severity="1">
+      </analysisRule> 
+   </extension>
+</plugin>
