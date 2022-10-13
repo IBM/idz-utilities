@@ -8,8 +8,7 @@ IDz is a comprehensive integrated development environment for developing and mai
 You can learn more about IBM Developer for z/OS at https://www.ibm.com/products/developer-for-zos and the IBM Developer for z/OS product offering is available at https://ibm.github.io/mainframe-downloads/downloads.html
 
 
-Note: some code or script samples may purposefully require changes as part of a guide, example, or exercise.
-
+Please note that some code or script samples may purposefully require changes as part of a guide, example, or exercise.
 
 
 IBM and z/OS are trademarks of International Business Machines Corporation, registered in many jurisdictions worldwide.
