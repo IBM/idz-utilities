@@ -1,3 +1,11 @@
 # idz-utilities
-Repository containing samples for IBM Developer for z Systems (IDz).  
-IDz is a comprehensive integrated development environment for developing and maintaining IBM z/OS applications. It covers both modern and traditional editing and SCM integration in remote and local usage scenarios. 
+
+This repository contains samples for IBM® Developer for z/OS® (IDz).
+
+IDz is a comprehensive integrated development environment for developing and maintaining IBM z/OS applications. It covers both modern and traditional editing and source code managment (SCM) integration in remote and local usage scenarios. 
+
+You can learn more about IBM Developer for z/OS at https://www.ibm.com/products/developer-for-zos and the IBM Developer for z/OS product offering is available at https://ibm.github.io/mainframe-downloads/downloads.html
+
+Please note that some samples may purposefully require changes for correct behavior or compilation, or otherwise show an error, as part of a guide, example, or exercise. 
+
+IBM and z/OS are trademarks of International Business Machines Corporation, registered in many jurisdictions worldwide.
