@@ -1,10 +1,11 @@
 rules:
+  # ZCodeScan Rules
   - id: zcodescan.cobol.rules.ProgramIdRule
-    severity: INFO
+    severity: MEDIUM
   - id: zcodescan.cobol.rules.CallSyntaxRule
-    severity: INFO
+    severity: MEDIUM
   - id: zcodescan.cobol.rules.SqlWhereRule
-    severity: HIGH
+    severity: MEDIUM
     statements:
       - name: "Select"
         value: true
@@ -13,7 +14,7 @@ rules:
       - name: "Update"
         value: true
   - id: zcodescan.cobol.rules.RequireEndClauseRule
-    severity: HIGH
+    severity: MEDIUM
     statements:
       - name: "If"
         value: true
@@ -28,7 +29,7 @@ rules:
   - id: zcodescan.cobol.rules.AcceptRule
     severity: INFO
   - id: zcodescan.cobol.rules.GotoRule
-    severity: INFO
+    severity: MEDIUM
   - id: zcodescan.cobol.rules.GotoParagraphRule
     severity: MEDIUM
   - id: zcodescan.cobol.rules.UnprotectedAuthCredentialRule
@@ -50,9 +51,9 @@ rules:
   - id: zcodescan.cobol.rules.PerformWithThroughRule
     severity: MEDIUM
   - id: "zcodescan.cobol.rules.InitializeRule"
-    severity: MEDIUM
+    severity: INFO
   - id: "zcodescan.cobol.rules.EvaluateNotIfRule"
-    severity: MEDIUM
+    severity: INFO
   - id: "zcodescan.cobol.rules.IfElseRule"
     severity: MEDIUM
   - id: zcodescan.cobol.rules.CancelRule
@@ -66,7 +67,7 @@ rules:
   - id: zcodescan.cobol.rules.Level88Rule
     severity: MEDIUM
   - id: zcodescan.cobol.rules.MultipleExitsRule
-    severity: MEDIUM    
+    severity: MEDIUM
   - id: zcodescan.cobol.rules.NestedIfLimitRule
     severity: MEDIUM
     statements:
@@ -95,17 +96,17 @@ rules:
   - id: zcodescan.cobol.rules.Comp3PictureClauseRule
     severity: MEDIUM
   - id: zcodescan.cobol.rules.AcceptFromConsoleRule
-    severity: MEDIUM
+    severity: HIGH
   - id: zcodescan.cobol.rules.OccursDependingOnRule
-    severity: MEDIUM   
+    severity: HIGH
   - id: zcodescan.cobol.rules.SqlAvoidSelectStarRule
-    severity: MEDIUM  
+    severity: HIGH
   - id: zcodescan.cobol.rules.SqlDeclareCursorOrderByRule
     severity: MEDIUM
   - id: zcodescan.cobol.rules.NextSentenceRule
-    severity: MEDIUM  
-  - id: zcodescan.cobol.rules.XMLParseRule
     severity: MEDIUM
+  - id: zcodescan.cobol.rules.XMLParseRule
+    severity: HIGH
   - id: zcodescan.cobol.rules.BinarySubscriptRule
     severity: MEDIUM
   - id: zcodescan.cobol.rules.CorrespondingRule
@@ -123,7 +124,7 @@ rules:
   - id: zcodescan.cobol.rules.NextSentenceInScopedRangeRule
     severity: MEDIUM
   - id: zcodescan.cobol.rules.CopybookRule
-    severity: MEDIUM
+    severity: HIGH
     statements:
       - name: CopybookName
         value: lgpolicy
@@ -142,17 +143,17 @@ rules:
   - id: zcodescan.cobol.rules.CopySuppressRule
     severity: MEDIUM
   - id: zcodescan.cobol.rules.SectionCommentRule
-    severity: MEDIUM
+    severity: LOW
     statements:
       - name: LOCATION
-        value: 0 
+        value: 0
   - id: zcodescan.cobol.rules.ParagraphCommentRule
-    severity: MEDIUM
+    severity: LOW
     statements:
       - name: LOCATION
         value: 0
   - id: zcodescan.cobol.rules.StaticCallNameRule
-    severity: MEDIUM
+    severity: HIGH
     statements:
       - name: PROGRAM_NAME
         value: TEST
@@ -160,7 +161,7 @@ rules:
     severity: MEDIUM
     statements:
       - name: CONDITION_NAME_PREFIX
-        value: TEST                               
+        value: TEST
   - id: zcodescan.cobol.rules.CompilerDirectivesRule
     severity: MEDIUM
     statements:
